@@ -8,50 +8,80 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        /* Бозгашти ранги тиллоии боҳашамат */
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; }
         
-        .league-container { margin-top: 80px; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        #coinCount { font-size: 70px; color: #ffd700; margin-top: 10px; font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.3); }
+        /* Sidebar Menu */
+        .menu-icon { position: absolute; top: 25px; left: 20px; font-size: 30px; cursor: pointer; z-index: 100; color: #ffd700; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 99; padding-top: 80px; border-right: 2px solid #ffd700; text-align: left; }
+        .sidebar.active { left: 0; }
+        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; }
+
+        /* Main UI */
+        .league-container { margin-top: 80px; font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #ffffff; }
+        #coinCount { font-size: 75px; color: #ffd700; margin-top: 10px; font-weight: bold; }
         
-        .coin-wrapper { margin-top: 70px; position: relative; display: inline-block; } 
+        /* Original Gold Coin Style */
+        .coin-wrapper { margin-top: 60px; position: relative; display: inline-block; } 
         #clicker { 
-            width: 230px; height: 230px; 
+            width: 240px; height: 240px; 
             background: radial-gradient(circle, #ffcc33, #cc9900); 
             border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; 
-            font-size: 105px; color: #663300; font-weight: bold; 
+            font-size: 110px; color: #663300; font-weight: bold; 
             border: 10px solid #e6b800; cursor: pointer; 
-            box-shadow: 0 0 40px rgba(255,204,51,0.4); transition: transform 0.1s; 
+            box-shadow: 0 0 30px rgba(255,215,0,0.3); transition: 0.1s;
         }
         #clicker:active { transform: scale(0.95); }
-        #clicker.locked { filter: grayscale(0.5) brightness(0.5); }
 
-        #lockOverlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 0, 0, 0.9); color: white; padding: 15px; border-radius: 15px; font-weight: bold; z-index: 10; display: none; width: 200px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-
-        .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 30px; border-radius: 25px; width: 85%; z-index: 1001; border: 2px solid #ffd700; box-shadow: 0 0 30px rgba(255,215,0,0.2); }
-        .btn-gold { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 20px; }
+        /* Modals */
+        .modal { display: none; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -30%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; }
+        .btn-action { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
         
+        .tariff-table { width: 100%; margin-top: 10px; border-collapse: collapse; text-align: left; }
+        .tariff-table td { padding: 12px 5px; border-bottom: 1px solid #004488; font-size: 16px; }
+        
+        /* Tap Animation */
         .plus-one { position: absolute; color: #ffd700; font-size: 30px; font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 50; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
     </style>
 </head>
 <body>
 
-    <div class="league-container">BRONZE LEAGUE</div>
+    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+
+    <div class="sidebar" id="sidebar">
+        <a onclick="inviteFriends()">👥 Invite Friends</a>
+        <a onclick="showModal('walletModal')">👛 Wallet</a>
+        <a href="https://t.me/husuri_ma" target="_blank">📢 Join Channel</a>
+        <a onclick="showModal('tariffModal')" style="color: #ffd700;">📊 Tariffs</a>
+        <a onclick="toggleSidebar()" style="color: #ff4444; margin-top: 20px;">❌ Close</a>
+    </div>
+
+    <div class="league-container" id="leagueName">BRONZE</div>
     <div id="coinCount">0</div>
 
     <div class="coin-wrapper" onclick="handleTap(event)">
-        <div id="lockOverlay">UPGRADE REQUIRED!<br><span style="font-size:12px">Tap to buy 1K Skin</span></div>
         <div id="clicker">D</div>
     </div>
     
-    <div style="margin-top:40px; color:#ffd700; font-weight: 500; letter-spacing: 1px;">TAP TO EARN</div>
+    <div style="margin-top:40px; color:#ffd700; font-size: 18px;">Tap and earn gold!</div>
 
-    <div id="shopModal" class="modal">
-        <h2 style="color:#ffd700; margin:0;">UPGRADE SHOP</h2>
-        <p style="margin-top:15px;">Unlock the **1K** gold skin and continue your journey!</p>
-        <button class="btn-gold" onclick="buyUpgrade()">BUY 1K SKIN (20 🪙)</button>
-        <p onclick="closeModal()" style="color:#ff4444; margin-top:20px; cursor:pointer; font-weight:bold;">CLOSE</p>
+    <div id="tariffModal" class="modal">
+        <h2 style="color:#ffd700;">TARIFF LIMITS</h2>
+        <table class="tariff-table">
+            <tr><td>🟤 BRONZE:</td><td>0 - 10,000</td></tr>
+            <tr><td>⚪ SILVER:</td><td>10,000 - 50,000</td></tr>
+            <tr><td>🟡 GOLD:</td><td>50,000 - 100,000</td></tr>
+            <tr><td>💎 PLATINUM:</td><td>100,000 - 200,000</td></tr>
+            <tr><td>🌟 DIAMOND:</td><td>200,000+</td></tr>
+        </table>
+        <button class="btn-action" onclick="closeModal('tariffModal')">GOT IT</button>
+    </div>
+
+    <div id="walletModal" class="modal">
+        <h2 style="color:#ffd700;">WALLET</h2>
+        <p>Connect your TON wallet to withdraw.</p>
+        <button class="btn-action">Connect Wallet</button>
+        <p onclick="closeModal('walletModal')" style="color:#ff4444; cursor:pointer; margin-top:15px;">Back</p>
     </div>
 
     <script>
@@ -72,47 +102,32 @@
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
         const userRef = database.ref('users/' + userId);
 
-        let coins = 0; let isUpgraded = false;
+        let coins = 0;
 
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 coins = data.coins || 0;
-                isUpgraded = data.isUpgraded || false;
                 document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-                
-                const clicker = document.getElementById('clicker');
-                const overlay = document.getElementById('lockOverlay');
-
-                if (isUpgraded) {
-                    clicker.innerText = "1K";
-                    clicker.style.fontSize = "75px";
-                } else {
-                    clicker.innerText = "D";
-                    clicker.style.fontSize = "105px";
-                }
-
-                if (coins >= 100 && !isUpgraded) {
-                    clicker.classList.add('locked');
-                    overlay.style.display = 'block';
-                } else {
-                    clicker.classList.remove('locked');
-                    overlay.style.display = 'none';
-                }
+                updateLeague(coins);
             }
         });
 
-        function handleTap(e) {
-            if (coins >= 100 && !isUpgraded) {
-                tg.HapticFeedback.notificationOccurred('warning');
-                document.getElementById('shopModal').style.display = 'block';
-                return;
-            }
+        function updateLeague(val) {
+            let name = "BRONZE";
+            if(val >= 10000) name = "SILVER";
+            if(val >= 50000) name = "GOLD";
+            if(val >= 100000) name = "PLATINUM";
+            if(val >= 200000) name = "DIAMOND";
+            document.getElementById('leagueName').innerText = name;
+        }
 
+        function handleTap(e) {
             coins++;
             userRef.update({ coins: coins });
             tg.HapticFeedback.impactOccurred('medium');
 
+            // +1 Animation
             const plus = document.createElement('div');
             plus.innerText = '+1';
             plus.className = 'plus-one';
@@ -122,17 +137,15 @@
             setTimeout(() => plus.remove(), 800);
         }
 
-        function buyUpgrade() {
-            if (coins >= 20) {
-                userRef.update({ coins: coins - 20, isUpgraded: true });
-                tg.HapticFeedback.notificationOccurred('success');
-                closeModal();
-            } else {
-                alert("Not enough coins!");
-            }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function showModal(id) { document.getElementById(id).style.display = 'block'; toggleSidebar(); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function inviteFriends() {
+            const link = "https://t.me/Dilik_gold_bot?start=" + userId;
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Join Dilik Gold and earn coins together!")}`);
+            toggleSidebar();
         }
-
-        function closeModal() { document.getElementById('shopModal').style.display = 'none'; }
     </script>
 </body>
 </html>
