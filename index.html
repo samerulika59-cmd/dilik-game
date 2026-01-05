@@ -16,16 +16,18 @@
         .sidebar.active { left: 0; }
         .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: flex; align-items: center; border-bottom: 1px solid #003366; margin: 5px 10px; border-radius: 12px; }
 
-        .league-container { margin-top: 60px; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; }
-        #coinCount { font-size: 60px; color: #ffd700; margin-top: 5px; font-weight: bold; }
+        .league-container { margin-top: 80px; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; }
+        #coinCount { font-size: 65px; color: #ffd700; margin-top: 10px; font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.3); }
         
-        #clicker { width: 220px; height: 220px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 100px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; margin-top: 20px; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 30px rgba(255,204,51,0.3); }
+        /* Танҳо ин бахш ислоҳ шуд, то акси танга ба поён фарояд */
+        .coin-wrapper { margin-top: 70px; } 
+        
+        #clicker { width: 230px; height: 230px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 105px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 40px rgba(255,204,51,0.3); transition: transform 0.1s; }
         #clicker:active { transform: scale(0.95); }
 
-        /* Ислоҳи қуттии Ҳамён */
-        .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; }
+        .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; box-shadow: 0 0 50px rgba(0,0,0,0.7); }
         input { width: 90%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 2px solid #ffd700; background: white !important; color: black !important; font-size: 16px; -webkit-user-select: text; user-select: text; }
-        .btn-gold { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn-gold { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -41,25 +43,29 @@
 
     <div class="league-container" id="leagueBox"><span id="leagueName">Bronze</span></div>
     <div id="coinCount">0</div>
-    <div id="clicker">D</div>
-    <div style="margin-top:15px; color:#ffd700;">Зер кун ва пул ба даст ор!</div>
+
+    <div class="coin-wrapper">
+        <div id="clicker">D</div>
+    </div>
+    
+    <div style="margin-top:35px; color:#ffd700; font-weight: 500;">Зер кун ва пул ба даст ор!</div>
 
     <div id="walletModal" class="modal">
         <h3 style="color:#ffd700;">Ҳамёни TON</h3>
-        <input type="text" id="walletAddr" placeholder="Суроғаро ин ҷо гузоред (Paste)">
+        <input type="text" id="walletAddr" placeholder="Суроғаро ворид кунед">
         <button class="btn-gold" onclick="saveWallet()">ЗАХИРА КАРДАН</button>
-        <p onclick="closeModal('walletModal')" style="color:#ff4444; margin-top:15px;">Бақия</p>
+        <p onclick="closeModal('walletModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Бақия</p>
     </div>
 
     <div id="botModal" class="modal">
         <h3 style="color:#ffd700;">🤖 Боти Худкор</h3>
-        <p id="botDesc">Бот дар вақти хомӯш будани экран танга ҷамъ мекунад.</p>
         <p>Сатҳи ҳозира: <span id="currentLvl">0</span></p>
         <button id="upgradeBotBtn" class="btn-gold" onclick="upgradeBot()">Навсозӣ (500 🪙)</button>
-        <p onclick="closeModal('botModal')" style="color:#ff4444; margin-top:15px;">Бақия</p>
+        <p onclick="closeModal('botModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Бақия</p>
     </div>
 
     <script>
+        // ... (қисми Script бетағйир мемонад) ...
         const firebaseConfig = {
             apiKey: "AIzaSyBM9eh6zH_u0mk4G8YdZdyu0QFnw5bkbCI",
             authDomain: "dilik-game.firebaseapp.com",
@@ -69,88 +75,66 @@
             messagingSenderId: "354871648694",
             appId: "1:354871648694:web:37372e8ef8dc33eaff2117"
         };
-
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const tg = window.Telegram.WebApp;
         tg.expand();
-
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
         const userRef = database.ref('users/' + userId);
-        
-        let coins = 0;
-        let botLevel = 0;
-        const botPrices = [0, 500, 2000, 5000, 10000, 20000, 40000, 70000, 100000, 150000, "ПУЛ"];
-
+        let coins = 0; let botLevel = 0; const botPrices = [0, 500, 2000, 5000, 10000, 20000, 40000, 70000, 100000, 150000];
+        function updateLeague(amt) {
+            const league = document.getElementById('leagueName');
+            const box = document.getElementById('leagueBox');
+            if (amt < 30000) { league.innerText = "Bronze"; box.style.color = "#cd7f32"; }
+            else if (amt < 80000) { league.innerText = "Silver"; box.style.color = "#c0c0c0"; }
+            else if (amt < 150000) { league.innerText = "Gold"; box.style.color = "#ffd700"; }
+            else { league.innerText = "Platinum"; box.style.color = "#e5e4e2"; }
+        }
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                coins = data.coins || 0;
-                botLevel = data.botLevel || 0;
+                coins = data.coins || 0; botLevel = data.botLevel || 0;
                 document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
                 document.getElementById('botLvlMenu').innerText = botLevel;
                 document.getElementById('currentLvl').innerText = botLevel;
-                
+                updateLeague(coins);
                 let nextPrice = botPrices[botLevel + 1];
                 document.getElementById('upgradeBotBtn').innerText = (botLevel >= 9) ? "Сатҳи 10 (Бо Пул)" : "Навсозӣ (" + nextPrice + " 🪙)";
-
-                // Ҳисоби офлайн
                 if (botLevel > 0 && data.lastLogin) {
                     let seconds = Math.floor((Date.now() - data.lastLogin) / 1000);
-                    if (seconds > 10) {
-                        let earned = seconds * (botLevel * 0.5); // Ҳар сатҳ суръатро зиёд мекунад
-                        coins += earned;
-                        userRef.update({ coins: coins, lastLogin: Date.now() });
-                        alert("Боти сатҳи " + botLevel + " ба шумо " + Math.floor(earned) + " танга овард! 🤖");
+                    if (seconds > 30) {
+                        let earned = seconds * (botLevel * 0.1);
+                        coins += earned; userRef.update({ coins: coins, lastLogin: Date.now() });
                     }
                 }
-            } else {
-                userRef.set({ coins: 0, botLevel: 0, lastLogin: Date.now() });
             }
         });
-
         document.getElementById('clicker').onclick = () => {
-            coins++;
-            document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
+            coins++; document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
             userRef.update({ coins: coins, lastLogin: Date.now() });
             tg.HapticFeedback.impactOccurred('medium');
         };
-
         function upgradeBot() {
-            if (botLevel >= 9) {
-                alert("Барои сатҳи 10 ба админ нависед: @Dilik_admin");
-                return;
-            }
+            if (botLevel >= 9) { alert("Барои сатҳи 10 ба @Dilik_admin нависед!"); return; }
             let price = botPrices[botLevel + 1];
             if (coins >= price) {
-                coins -= price;
-                botLevel++;
+                coins -= price; botLevel++;
                 userRef.update({ coins: coins, botLevel: botLevel });
-                alert("Бот ба сатҳи " + botLevel + " бардошта шуд!");
-            } else {
-                alert("Тангаи кофӣ надоред!");
-            }
+                alert("Бот навсозӣ шуд!");
+            } else { alert("Тангаи кофӣ надоред!"); }
         }
-
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showModal(id) { document.getElementById(id).style.display = 'block'; toggleSidebar(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
         function saveWallet() {
             const addr = document.getElementById('walletAddr').value.trim();
-            if (addr.length > 8) {
-                userRef.update({ wallet: addr });
-                alert("Ҳамён захира шуд!");
-                closeModal('walletModal');
-            }
+            if (addr.length > 8) { userRef.update({ wallet: addr }); alert("Ҳамён захира шуд!"); closeModal('walletModal'); }
         }
-
         function inviteFriend() {
             const link = "https://t.me/Dilik_gold_bot?start=" + userId;
             tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link));
         }
-        
-        setInterval(() => { if(userId) userRef.update({ lastLogin: Date.now() }); }, 10000);
+        setInterval(() => { if(userId) userRef.update({ lastLogin: Date.now() }); }, 20000);
     </script>
 </body>
 </html>
