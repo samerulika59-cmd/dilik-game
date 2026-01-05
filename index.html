@@ -15,9 +15,15 @@
         .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; }
         .league-header { margin-top: 80px; font-size: 26px; font-weight: 900; color: #ffffff; text-transform: uppercase; }
         #coinCount { font-size: 70px; color: #ffd700; margin-top: 5px; font-weight: bold; }
-        .coin-wrapper { margin-top: 50px; position: relative; display: inline-block; -webkit-tap-highlight-color: transparent; } 
-        #clicker { width: 240px; height: 240px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 100px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; box-shadow: 0 0 30px rgba(255,215,0,0.3); transition: transform 0.05s; user-select: none; }
+        .coin-wrapper { margin-top: 40px; position: relative; display: inline-block; -webkit-tap-highlight-color: transparent; } 
+        #clicker { width: 220px; height: 220px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 100px; color: #663300; font-weight: bold; border: 8px solid #e6b800; cursor: pointer; box-shadow: 0 0 30px rgba(255,215,0,0.3); transition: transform 0.05s; user-select: none; }
         #clicker:active { transform: scale(0.96); }
+        
+        /* Auto-Bot UI */
+        .bot-container { margin: 30px auto; width: 85%; background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 20px; border: 1px solid #ffd700; }
+        .bot-info { display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 10px; }
+        .bot-btn { background: #ffd700; color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
+        
         .modal { display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -10%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; }
         .btn-action { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
         input { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; box-sizing: border-box; }
@@ -39,27 +45,21 @@
     <div class="league-header" id="leagueName">BRONZE</div>
     <div id="coinCount">0</div>
     <div class="coin-wrapper" onclick="handleTap(event)"><div id="clicker">D</div></div>
-    <p style="color:#ffd700; margin-top:40px; font-weight: 500;">TAP TO EARN</p>
+    
+    <div class="bot-container">
+        <div class="bot-info">
+            <span>🤖 AUTO-BOT</span>
+            <span id="botLevelDisplay">LVL: 0</span>
+        </div>
+        <button id="upgradeBotBtn" class="bot-btn" onclick="upgradeBot()">UPGRADE (500)</button>
+    </div>
 
     <div id="walletModal" class="modal">
         <h2 style="color:#ffd700">WALLET</h2>
-        <p>Send gold to a friend (5% fee):</p>
-        <input type="text" id="targetId" placeholder="Friend's Telegram ID">
-        <input type="number" id="amount" placeholder="Amount to send">
-        <button class="btn-action" onclick="transferCoins()">SEND GOLD</button>
+        <input type="text" id="targetId" placeholder="Friend's ID">
+        <input type="number" id="amount" placeholder="Amount">
+        <button class="btn-action" onclick="transferCoins()">SEND GOLD (5% FEE)</button>
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">BACK</button>
-    </div>
-
-    <div id="adminModal" class="modal">
-        <h2 style="color:#00ff00">ADMIN</h2>
-        <button class="btn-action" onclick="addAdminCoins()">+100,000</button>
-        <button class="btn-action" onclick="closeM('adminModal')">CLOSE</button>
-    </div>
-
-    <div id="tariffModal" class="modal">
-        <h2 style="color:#ffd700">TARIFFS</h2>
-        <p>BRONZE: 10k | SILVER: 50k | GOLD: 100k | PLATINUM: 200k</p>
-        <button class="btn-action" onclick="closeM('tariffModal')">OK</button>
     </div>
 
     <script>
@@ -71,21 +71,59 @@
         
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
         const userRef = firebase.database().ref('users/' + userId);
+        
         let coins = 0;
-        let bonusClaimed = false;
+        let botLvl = 0;
+        const botCosts = [500, 1500, 5000, 8000, 15000, 30000, 60000, 100000, 200000];
 
         userRef.on('value', (s) => {
             const data = s.val();
             coins = data?.coins || 0;
-            bonusClaimed = data?.bonusClaimed || false;
-            document.getElementById('coinCount').innerText = coins.toLocaleString();
-            let l = "BRONZE";
-            if(coins >= 10000) l = "SILVER";
-            if(coins >= 50000) l = "GOLD";
-            if(coins >= 100000) l = "PLATINUM";
-            document.getElementById('leagueName').innerText = l + " LEAGUE";
+            botLvl = data?.botLvl || 0;
+            document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
+            document.getElementById('botLevelDisplay').innerText = `LVL: ${botLvl}`;
+            
+            let btn = document.getElementById('upgradeBotBtn');
+            if (botLvl >= 10) {
+                btn.innerText = "MAX LEVEL";
+                btn.disabled = true;
+            } else if (botLvl === 9) {
+                btn.innerText = "UPGRADE TO LVL 10 ($0.5)";
+            } else {
+                btn.innerText = `UPGRADE (${botCosts[botLvl].toLocaleString()})`;
+            }
+
             if (userId == ADMIN_ID) document.getElementById('adminBtn').style.display = 'block';
         });
+
+        // Auto-mining logic
+        setInterval(() => {
+            if (botLvl > 0) {
+                let gain = botLvl * 0.5; // Суръати майнинг вобаста ба сатҳ
+                coins += gain;
+                userRef.update({coins: coins});
+            }
+        }, 1000);
+
+        function upgradeBot() {
+            if (botLvl >= 10) return;
+            
+            if (botLvl === 9) {
+                tg.showAlert("Redirecting to payment for Level 10 ($0.5)...");
+                // Дар ин ҷо шумо метавонед tg.openInvoice-ро истифода баред
+                return;
+            }
+
+            let cost = botCosts[botLvl];
+            if (coins >= cost) {
+                coins -= cost;
+                botLvl++;
+                userRef.update({coins: coins, botLvl: botLvl});
+                tg.showAlert(`Auto-Bot upgraded to Level ${botLvl}!`);
+            } else {
+                tg.showAlert("Not enough coins!");
+            }
+        }
 
         function handleTap(e) {
             coins++;
@@ -100,46 +138,26 @@
             setTimeout(() => plus.remove(), 700);
         }
 
-        function claimBonus() {
-            if (!bonusClaimed) {
-                coins += 5000;
-                userRef.update({coins: coins, bonusClaimed: true});
-                tg.showAlert("Congratulations! 5,000 bonus coins added for joining the channel.");
-            }
-        }
-
         function transferCoins() {
             const tid = document.getElementById('targetId').value;
             const amt = parseInt(document.getElementById('amount').value);
-            if (!tid || isNaN(amt) || amt <= 0) return tg.showAlert("Invalid data!");
-            if (coins < amt) return tg.showAlert("Not enough coins!");
-
-            const fee = Math.floor(amt * 0.05);
-            const netAmount = amt - fee;
-
-            // Update sender
-            userRef.update({coins: coins - amt});
-            // Update receiver
-            firebase.database().ref('users/' + tid).once('value', (snap) => {
-                const current = snap.val()?.coins || 0;
-                firebase.database().ref('users/' + tid).update({coins: current + netAmount});
-                // Send fee to admin account
-                firebase.database().ref('users/' + ADMIN_ID).once('value', (aSnap) => {
-                   const aCoins = aSnap.val()?.coins || 0;
-                   firebase.database().ref('users/' + ADMIN_ID).update({coins: aCoins + fee});
+            if (coins >= amt) {
+                const fee = Math.floor(amt * 0.05);
+                userRef.update({coins: coins - amt});
+                firebase.database().ref('users/'+tid).once('value', s => {
+                    let c = s.val()?.coins || 0;
+                    firebase.database().ref('users/'+tid).update({coins: c + (amt-fee)});
                 });
-                tg.showAlert(`Sent ${netAmount} coins to ${tid}. Fee (5%): ${fee}`);
-                closeM('walletModal');
-            });
+                tg.showAlert("Success!");
+            }
         }
 
-        function addAdminCoins() { coins += 100000; userRef.update({coins: coins}); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { document.getElementById(id).style.display='block'; toggleSidebar(); }
         function closeM(id) { document.getElementById(id).style.display='none'; }
         function invite() {
             const botLink = `https://t.me/Dilik_gold_bot?start=${userId}`;
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=Join%20my%20Dilik%20Gold%20team!`);
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=Join%20my%20team!`);
         }
     </script>
 </body>
