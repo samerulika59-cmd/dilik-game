@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tg">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -19,14 +19,16 @@
         .league-container { margin-top: 80px; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; }
         #coinCount { font-size: 65px; color: #ffd700; margin-top: 10px; font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.3); }
         
-        /* Танҳо ин бахш ислоҳ шуд, то акси танга ба поён фарояд */
-        .coin-wrapper { margin-top: 70px; } 
-        
-        #clicker { width: 230px; height: 230px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 105px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 40px rgba(255,204,51,0.3); transition: transform 0.1s; }
+        .coin-wrapper { margin-top: 70px; position: relative; display: inline-block; } 
+        #clicker { width: 230px; height: 230px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 105px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 40px rgba(255,204,51,0.3); transition: transform 0.1s; position: relative; z-index: 5; }
         #clicker:active { transform: scale(0.95); }
 
-        .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; box-shadow: 0 0 50px rgba(0,0,0,0.7); }
-        input { width: 90%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 2px solid #ffd700; background: white !important; color: black !important; font-size: 16px; -webkit-user-select: text; user-select: text; }
+        /* Animation +1 */
+        .plus-one { position: absolute; color: #ffd700; font-size: 24px; font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 10; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+
+        .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; }
+        input { width: 90%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 2px solid #ffd700; background: white !important; color: black !important; font-size: 16px; }
         .btn-gold { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
@@ -35,37 +37,36 @@
     <div class="menu-icon" onclick="toggleSidebar()">☰</div>
 
     <div class="sidebar" id="sidebar">
-        <a href="#" onclick="showModal('walletModal')">👛 Ҳамён</a>
-        <a href="#" onclick="showModal('botModal')">🤖 Автобот (Сатҳ: <span id="botLvlMenu">0</span>)</a>
-        <a href="#" onclick="inviteFriend()">👥 Даъвати дӯст</a>
-        <a href="#" onclick="toggleSidebar()" style="margin-top: 30px; color: #ff8888;">❌ Пӯшидан</a>
+        <a href="#" onclick="showModal('walletModal')">👛 Wallet</a>
+        <a href="#" onclick="showModal('botModal')">🤖 AutoBot (Lvl: <span id="botLvlMenu">0</span>)</a>
+        <a href="#" onclick="inviteFriend()">👥 Invite Friends</a>
+        <a href="#" onclick="toggleSidebar()" style="margin-top: 30px; color: #ff8888;">❌ Close</a>
     </div>
 
     <div class="league-container" id="leagueBox"><span id="leagueName">Bronze</span></div>
     <div id="coinCount">0</div>
 
-    <div class="coin-wrapper">
+    <div class="coin-wrapper" id="coinWrapper">
         <div id="clicker">D</div>
     </div>
     
-    <div style="margin-top:35px; color:#ffd700; font-weight: 500;">Зер кун ва пул ба даст ор!</div>
+    <div style="margin-top:35px; color:#ffd700; font-weight: 500;">Tap to Earn!</div>
 
     <div id="walletModal" class="modal">
-        <h3 style="color:#ffd700;">Ҳамёни TON</h3>
-        <input type="text" id="walletAddr" placeholder="Суроғаро ворид кунед">
-        <button class="btn-gold" onclick="saveWallet()">ЗАХИРА КАРДАН</button>
-        <p onclick="closeModal('walletModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Бақия</p>
+        <h3 style="color:#ffd700;">TON Wallet</h3>
+        <input type="text" id="walletAddr" placeholder="Paste your address here">
+        <button class="btn-gold" onclick="saveWallet()">SAVE ADDRESS</button>
+        <p onclick="closeModal('walletModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Back</p>
     </div>
 
     <div id="botModal" class="modal">
-        <h3 style="color:#ffd700;">🤖 Боти Худкор</h3>
-        <p>Сатҳи ҳозира: <span id="currentLvl">0</span></p>
-        <button id="upgradeBotBtn" class="btn-gold" onclick="upgradeBot()">Навсозӣ (500 🪙)</button>
-        <p onclick="closeModal('botModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Бақия</p>
+        <h3 style="color:#ffd700;">🤖 AutoBot Upgrade</h3>
+        <p>Current Level: <span id="currentLvl">0</span></p>
+        <button id="upgradeBotBtn" class="btn-gold" onclick="upgradeBot()">Upgrade (500 🪙)</button>
+        <p onclick="closeModal('botModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Back</p>
     </div>
 
     <script>
-        // ... (қисми Script бетағйир мемонад) ...
         const firebaseConfig = {
             apiKey: "AIzaSyBM9eh6zH_u0mk4G8YdZdyu0QFnw5bkbCI",
             authDomain: "dilik-game.firebaseapp.com",
@@ -81,7 +82,9 @@
         tg.expand();
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
         const userRef = database.ref('users/' + userId);
+        
         let coins = 0; let botLevel = 0; const botPrices = [0, 500, 2000, 5000, 10000, 20000, 40000, 70000, 100000, 150000];
+
         function updateLeague(amt) {
             const league = document.getElementById('leagueName');
             const box = document.getElementById('leagueBox');
@@ -90,6 +93,7 @@
             else if (amt < 150000) { league.innerText = "Gold"; box.style.color = "#ffd700"; }
             else { league.innerText = "Platinum"; box.style.color = "#e5e4e2"; }
         }
+
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -99,7 +103,8 @@
                 document.getElementById('currentLvl').innerText = botLevel;
                 updateLeague(coins);
                 let nextPrice = botPrices[botLevel + 1];
-                document.getElementById('upgradeBotBtn').innerText = (botLevel >= 9) ? "Сатҳи 10 (Бо Пул)" : "Навсозӣ (" + nextPrice + " 🪙)";
+                document.getElementById('upgradeBotBtn').innerText = (botLevel >= 9) ? "Level 10 (Pay Admin)" : "Upgrade (" + nextPrice + " 🪙)";
+                
                 if (botLevel > 0 && data.lastLogin) {
                     let seconds = Math.floor((Date.now() - data.lastLogin) / 1000);
                     if (seconds > 30) {
@@ -109,30 +114,43 @@
                 }
             }
         });
-        document.getElementById('clicker').onclick = () => {
-            coins++; document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
+
+        document.getElementById('clicker').onclick = (e) => {
+            coins++;
+            document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
             userRef.update({ coins: coins, lastLogin: Date.now() });
             tg.HapticFeedback.impactOccurred('medium');
+
+            // Create +1 effect
+            const plus = document.createElement('div');
+            plus.innerText = '+1';
+            plus.className = 'plus-one';
+            plus.style.left = (e.clientX - 20) + 'px';
+            plus.style.top = (e.clientY - 40) + 'px';
+            document.body.appendChild(plus);
+            setTimeout(() => plus.remove(), 800);
         };
+
         function upgradeBot() {
-            if (botLevel >= 9) { alert("Барои сатҳи 10 ба @Dilik_admin нависед!"); return; }
+            if (botLevel >= 9) { alert("Contact @Dilik_admin for Level 10!"); return; }
             let price = botPrices[botLevel + 1];
             if (coins >= price) {
                 coins -= price; botLevel++;
                 userRef.update({ coins: coins, botLevel: botLevel });
-                alert("Бот навсозӣ шуд!");
-            } else { alert("Тангаи кофӣ надоред!"); }
+                alert("Bot Upgraded! 🚀");
+            } else { alert("Not enough coins!"); }
         }
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showModal(id) { document.getElementById(id).style.display = 'block'; toggleSidebar(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function saveWallet() {
             const addr = document.getElementById('walletAddr').value.trim();
-            if (addr.length > 8) { userRef.update({ wallet: addr }); alert("Ҳамён захира шуд!"); closeModal('walletModal'); }
+            if (addr.length > 8) { userRef.update({ wallet: addr }); alert("Wallet Saved! ✅"); closeModal('walletModal'); }
         }
         function inviteFriend() {
             const link = "https://t.me/Dilik_gold_bot?start=" + userId;
-            tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link));
+            tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent("Join me in Dilik Gold!"));
         }
         setInterval(() => { if(userId) userRef.update({ lastLogin: Date.now() }); }, 20000);
     </script>
