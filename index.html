@@ -7,28 +7,32 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; }
         
-        /* Менюи се хатча */
-        .menu-icon { position: absolute; top: 20px; left: 20px; font-size: 30px; cursor: pointer; z-index: 100; }
-        .sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: #001529; transition: 0.3s; z-index: 99; padding-top: 60px; text-align: left; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+        /* Менюи нав */
+        .menu-icon { position: absolute; top: 25px; left: 20px; font-size: 30px; cursor: pointer; z-index: 100; color: #ffd700; }
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 99; padding-top: 80px; border-right: 2px solid #ffd700; }
         .sidebar.active { left: 0; }
-        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #ffd700; display: block; border-bottom: 1px solid #002b52; }
+        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: flex; align-items: center; border-bottom: 1px solid #003366; margin: 5px 10px; border-radius: 12px; transition: 0.2s; }
+        .sidebar a:active { background: #003366; transform: scale(0.98); }
+        .icon-box { margin-right: 15px; font-size: 22px; }
+
+        /* Лига ва Танга */
+        .league-container { margin-top: 90px; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #coinCount { font-size: 60px; color: #ffd700; margin-top: 10px; font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.4); }
         
-        #coinCount { font-size: 50px; color: #ffd700; margin-top: 50px; font-weight: bold; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
-        
-        /* Танга аз рӯи расми шумо */
-        .coin-container { margin-top: 40px; }
-        #clicker { width: 250px; height: 250px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 120px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 30px rgba(255,204,51,0.4); }
+        .coin-container { margin-top: 30px; }
+        #clicker { width: 240px; height: 240px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 110px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 40px rgba(255,204,51,0.3); }
         #clicker:active { transform: scale(0.92); }
         
-        .instruction { font-size: 20px; color: #ffd700; margin-top: 20px; }
-        
-        /* Қисми ҳамён ва бот дар дохили меню */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #002b52; padding: 20px; border-radius: 15px; width: 80%; z-index: 101; border: 2px solid #ffd700; }
-        input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
-        .close-btn { background: #ff4444; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; float: right; }
+        .instruction { font-size: 18px; color: #ffd700; margin-top: 25px; font-weight: 500; }
+
+        /* Модал (Окно) */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 101; border: 2px solid #ffd700; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        input { width: 90%; padding: 12px; margin: 15px 0; border-radius: 10px; border: 1px solid #ffd700; background: #000; color: white; font-size: 16px; }
+        .save-btn { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -36,10 +40,14 @@
     <div class="menu-icon" onclick="toggleSidebar()">☰</div>
 
     <div class="sidebar" id="sidebar">
-        <a href="#" onclick="showModal('walletModal')">👛 Ҳамён (Wallet)</a>
-        <a href="#" onclick="buyAutoBot()">🤖 Боти худкор (1000 🪙)</a>
-        <a href="#" onclick="inviteFriend()">👥 Таклифи дӯстон</a>
-        <a href="#" onclick="toggleSidebar()" style="color: #ff4444;">❌ Пӯшидан</a>
+        <a href="#" onclick="showModal('walletModal')"><span class="icon-box">👛</span> Ҳамён</a>
+        <a href="#" onclick="buyAutoBot()"><span class="icon-box">🤖</span> Автобот</a>
+        <a href="#" onclick="inviteFriend()"><span class="icon-box">👥</span> Даъвати дӯст</a>
+        <a href="#" onclick="toggleSidebar()" style="margin-top: 50px; background: #4a0000; color: #ff8888;"><span class="icon-box">❌</span> Пӯшидан</a>
+    </div>
+
+    <div class="league-container" id="leagueBox">
+        <span id="leagueName">Bronze</span>
     </div>
 
     <div id="coinCount">0</div>
@@ -50,11 +58,11 @@
     <div class="instruction">Зер кун ва пул ба даст ор!</div>
 
     <div id="walletModal" class="modal">
-        <span class="close-btn" onclick="closeModal('walletModal')">X</span>
-        <h3>Танзимоти ҳамён</h3>
-        <input type="text" id="walletAddr" placeholder="Суроғаи TON">
-        <button onclick="saveWallet()" style="width:100%; padding:10px; background:#ffd700; border:none; border-radius:5px;">Захира</button>
-        <p id="withdrawInfo" style="font-size:12px; margin-top:10px;">Лимит барои вывод: 200,000</p>
+        <h3 style="margin-top:0; color:#ffd700;">Ҳамёни TON</h3>
+        <p style="font-size:14px; color:#ccc;">Суроғаро барои гирифтани маблағ ворид кунед:</p>
+        <input type="text" id="walletAddr" placeholder="UQ... ё EQ...">
+        <button class="save-btn" onclick="saveWallet()">ЗАХИРА КАРДАН</button>
+        <p onclick="closeModal('walletModal')" style="margin-top:15px; cursor:pointer; color:#ff4444;">Бақия</p>
     </div>
 
     <script>
@@ -77,46 +85,53 @@
         const userRef = database.ref('users/' + userId);
         
         let coins = 0;
-        let hasBot = false;
-        let lastTime = Date.now();
+        let currentLeague = "Bronze";
+
+        function updateLeague(amt) {
+            let newLeague = "Bronze";
+            let color = "#cd7f32";
+
+            if (amt >= 150000) { newLeague = "Platinum"; color = "#e5e4e2"; }
+            else if (amt >= 80000) { newLeague = "Gold"; color = "#ffd700"; }
+            else if (amt >= 30000) { newLeague = "Silver"; color = "#c0c0c0"; }
+
+            if (newLeague !== currentLeague) {
+                currentLeague = newLeague;
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                tg.HapticFeedback.notificationOccurred('success');
+                alert("Табрик! Шумо ба лигаи " + newLeague + " гузаштед! 🎉");
+            }
+
+            document.getElementById('leagueName').innerText = newLeague;
+            document.getElementById('leagueBox').style.color = color;
+        }
 
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 coins = data.coins || 0;
-                hasBot = data.hasBot || false;
                 document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-                
-                // Ҳисоби боти офлайн
-                if (hasBot && data.lastLogin) {
-                    const diff = Math.floor((Date.now() - data.lastLogin) / 1000);
-                    if (diff > 5) {
-                        const earned = diff * 1; // 1 танга дар сония
-                        coins += earned;
-                        alert("Боти шумо дар вақти набудани шумо " + earned + " танга ҷамъ кард!");
-                        userRef.update({ coins: coins, lastLogin: Date.now() });
-                    }
-                }
-            } else {
-                userRef.set({ coins: 0, hasBot: false, lastLogin: Date.now() });
+                updateLeague(coins);
+                if (data.wallet) document.getElementById('walletAddr').value = data.wallet;
             }
         });
 
-        // Клик
         document.getElementById('clicker').onclick = () => {
             coins++;
             document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-            userRef.update({ coins: coins, lastLogin: Date.now() });
+            updateLeague(coins);
+            userRef.update({ coins: coins });
+            tg.HapticFeedback.impactOccurred('medium');
         };
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showModal(id) { document.getElementById(id).style.display = 'block'; toggleSidebar(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
+        
         function saveWallet() {
             const addr = document.getElementById('walletAddr').value;
             userRef.update({ wallet: addr });
-            alert("Ҳамён захира шуд!");
+            alert("Ҳамён бо муваффақият пайваст шуд!");
             closeModal('walletModal');
         }
 
@@ -124,21 +139,15 @@
             if (coins >= 1000) {
                 coins -= 1000;
                 userRef.update({ coins: coins, hasBot: true });
-                alert("Бот харида шуд! Акнун дар ҳолати офлайн танга ҷамъ мешавад.");
-            } else {
-                alert("Маблағ кифоя нест!");
-            }
+                alert("Боти худкор фаъол шуд! 🤖");
+            } else { alert("Маблағ барои бот (1000 танга) кифоя нест!"); }
         }
 
         function inviteFriend() {
             const link = "https://t.me/Dilik_gold_bot?start=" + userId;
-            prompt("Истиноди таклифӣ барои дӯстон:", link);
+            tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent("Бо ман дар Dilik Gold танга ҷамъ кун!"));
         }
-
-        // Навсозии вақт ҳар 10 сония
-        setInterval(() => {
-            if (userId) userRef.update({ lastLogin: Date.now() });
-        }, 10000);
     </script>
 </body>
 </html>
+
