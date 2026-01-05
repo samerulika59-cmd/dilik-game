@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dilik Gold Bot</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; }
+        
+        /* Менюи се хатча */
+        .menu-icon { position: absolute; top: 20px; left: 20px; font-size: 30px; cursor: pointer; z-index: 100; }
+        .sidebar { position: fixed; left: -250px; top: 0; width: 250px; height: 100%; background: #001529; transition: 0.3s; z-index: 99; padding-top: 60px; text-align: left; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+        .sidebar.active { left: 0; }
+        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 18px; color: #ffd700; display: block; border-bottom: 1px solid #002b52; }
+        
+        #coinCount { font-size: 50px; color: #ffd700; margin-top: 50px; font-weight: bold; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
+        
+        /* Танга аз рӯи расми шумо */
+        .coin-container { margin-top: 40px; }
+        #clicker { width: 250px; height: 250px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 120px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 30px rgba(255,204,51,0.4); }
+        #clicker:active { transform: scale(0.92); }
+        
+        .instruction { font-size: 20px; color: #ffd700; margin-top: 20px; }
+        
+        /* Қисми ҳамён ва бот дар дохили меню */
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #002b52; padding: 20px; border-radius: 15px; width: 80%; z-index: 101; border: 2px solid #ffd700; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+        .close-btn { background: #ff4444; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; float: right; }
+    </style>
+</head>
+<body>
+
+    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+
+    <div class="sidebar" id="sidebar">
+        <a href="#" onclick="showModal('walletModal')">👛 Ҳамён (Wallet)</a>
+        <a href="#" onclick="buyAutoBot()">🤖 Боти худкор (1000 🪙)</a>
+        <a href="#" onclick="inviteFriend()">👥 Таклифи дӯстон</a>
+        <a href="#" onclick="toggleSidebar()" style="color: #ff4444;">❌ Пӯшидан</a>
+    </div>
+
+    <div id="coinCount">0</div>
+
+    <div class="coin-container">
+        <div id="clicker">D</div>
+    </div>
+    <div class="instruction">Зер кун ва пул ба даст ор!</div>
+
+    <div id="walletModal" class="modal">
+        <span class="close-btn" onclick="closeModal('walletModal')">X</span>
+        <h3>Танзимоти ҳамён</h3>
+        <input type="text" id="walletAddr" placeholder="Суроғаи TON">
+        <button onclick="saveWallet()" style="width:100%; padding:10px; background:#ffd700; border:none; border-radius:5px;">Захира</button>
+        <p id="withdrawInfo" style="font-size:12px; margin-top:10px;">Лимит барои вывод: 200,000</p>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBM9eh6zH_u0mk4G8YdZdyu0QFnw5bkbCI",
+            authDomain: "dilik-game.firebaseapp.com",
+            databaseURL: "https://dilik-game-default-rtdb.firebaseio.com",
+            projectId: "dilik-game",
+            storageBucket: "dilik-game.firebasestorage.app",
+            messagingSenderId: "354871648694",
+            appId: "1:354871648694:web:37372e8ef8dc33eaff2117"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
+        const userRef = database.ref('users/' + userId);
+        
+        let coins = 0;
+        let hasBot = false;
+        let lastTime = Date.now();
+
+        userRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                coins = data.coins || 0;
+                hasBot = data.hasBot || false;
+                document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
+                
+                // Ҳисоби боти офлайн
+                if (hasBot && data.lastLogin) {
+                    const diff = Math.floor((Date.now() - data.lastLogin) / 1000);
+                    if (diff > 5) {
+                        const earned = diff * 1; // 1 танга дар сония
+                        coins += earned;
+                        alert("Боти шумо дар вақти набудани шумо " + earned + " танга ҷамъ кард!");
+                        userRef.update({ coins: coins, lastLogin: Date.now() });
+                    }
+                }
+            } else {
+                userRef.set({ coins: 0, hasBot: false, lastLogin: Date.now() });
+            }
+        });
+
+        // Клик
+        document.getElementById('clicker').onclick = () => {
+            coins++;
+            document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
+            userRef.update({ coins: coins, lastLogin: Date.now() });
+        };
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function showModal(id) { document.getElementById(id).style.display = 'block'; toggleSidebar(); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function saveWallet() {
+            const addr = document.getElementById('walletAddr').value;
+            userRef.update({ wallet: addr });
+            alert("Ҳамён захира шуд!");
+            closeModal('walletModal');
+        }
+
+        function buyAutoBot() {
+            if (coins >= 1000) {
+                coins -= 1000;
+                userRef.update({ coins: coins, hasBot: true });
+                alert("Бот харида шуд! Акнун дар ҳолати офлайн танга ҷамъ мешавад.");
+            } else {
+                alert("Маблағ кифоя нест!");
+            }
+        }
+
+        function inviteFriend() {
+            const link = "https://t.me/Dilik_gold_bot?start=" + userId;
+            prompt("Истиноди таклифӣ барои дӯстон:", link);
+        }
+
+        // Навсозии вақт ҳар 10 сония
+        setInterval(() => {
+            if (userId) userRef.update({ lastLogin: Date.now() });
+        }, 10000);
+    </script>
+</body>
+</html>
