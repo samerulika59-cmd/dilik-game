@@ -3,33 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dilik Gold Bot</title>
+    <title>Dilik Gold Test</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; }
         
         .menu-icon { position: absolute; top: 25px; left: 20px; font-size: 30px; cursor: pointer; z-index: 100; color: #ffd700; }
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 99; padding-top: 80px; border-right: 2px solid #ffd700; }
         .sidebar.active { left: 0; }
-        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: flex; align-items: center; border-bottom: 1px solid #003366; margin: 5px 10px; border-radius: 12px; }
+        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; }
 
-        .league-container { margin-top: 80px; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; }
-        #coinCount { font-size: 65px; color: #ffd700; margin-top: 10px; font-weight: bold; text-shadow: 0 0 20px rgba(255,215,0,0.3); }
+        .league-container { margin-top: 80px; font-size: 24px; font-weight: bold; text-transform: uppercase; }
+        #coinCount { font-size: 60px; color: #ffd700; margin-top: 10px; font-weight: bold; }
         
-        .coin-wrapper { margin-top: 70px; position: relative; display: inline-block; } 
-        #clicker { width: 230px; height: 230px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 105px; color: #663300; font-weight: bold; border: 10px solid #e6b800; cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: 0 0 40px rgba(255,204,51,0.3); transition: transform 0.1s; position: relative; z-index: 5; }
-        #clicker:active { transform: scale(0.95); }
+        .coin-wrapper { margin-top: 60px; position: relative; display: inline-block; } 
+        #clicker { width: 220px; height: 220px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 100px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 10px solid; }
+        
+        /* Рангҳои танга */
+        .skin-0 { background: radial-gradient(circle, #ffcc33, #cc9900); border-color: #e6b800; color: #663300; }
+        .skin-1 { background: radial-gradient(circle, #00ffcc, #0099cc); border-color: #00cccc; color: #003333; }
+        .skin-2 { background: radial-gradient(circle, #ff33ec, #9900cc); border-color: #cc00bb; color: #330033; }
 
-        /* Animation +1 */
-        .plus-one { position: absolute; color: #ffd700; font-size: 24px; font-weight: bold; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 10; }
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        /* Эффекти маҳкамшавӣ */
+        #clicker.locked { filter: grayscale(1) brightness(0.5); cursor: not-allowed; }
+        #lockMessage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: red; color: white; padding: 10px; border-radius: 8px; font-weight: bold; z-index: 20; display: none; width: 160px; }
 
-        .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; }
-        input { width: 90%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 2px solid #ffd700; background: white !important; color: black !important; font-size: 16px; }
-        .btn-gold { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
+        .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 25px; border-radius: 20px; width: 80%; z-index: 1001; border: 2px solid #ffd700; }
+        .btn-shop { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -37,36 +39,28 @@
     <div class="menu-icon" onclick="toggleSidebar()">☰</div>
 
     <div class="sidebar" id="sidebar">
-        <a href="#" onclick="showModal('walletModal')">👛 Wallet</a>
-        <a href="#" onclick="showModal('botModal')">🤖 AutoBot (Lvl: <span id="botLvlMenu">0</span>)</a>
-        <a href="#" onclick="inviteFriend()">👥 Invite Friends</a>
-        <a href="#" onclick="toggleSidebar()" style="margin-top: 30px; color: #ff8888;">❌ Close</a>
+        <a href="#" onclick="showModal('shopModal')">🎨 Skin Shop</a>
+        <a href="#" onclick="toggleSidebar()" style="color: #ff8888; margin-top: 20px;">❌ Close</a>
     </div>
 
-    <div class="league-container" id="leagueBox"><span id="leagueName">Bronze</span></div>
+    <div class="league-container">League: <span id="leagueName">Test</span></div>
     <div id="coinCount">0</div>
 
-    <div class="coin-wrapper" id="coinWrapper">
-        <div id="clicker">D</div>
-    </div>
-    
-    <div style="margin-top:35px; color:#ffd700; font-weight: 500;">Tap to Earn!</div>
-
-    <div id="walletModal" class="modal">
-        <h3 style="color:#ffd700;">TON Wallet</h3>
-        <input type="text" id="walletAddr" placeholder="Paste your address here">
-        <button class="btn-gold" onclick="saveWallet()">SAVE ADDRESS</button>
-        <p onclick="closeModal('walletModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Back</p>
+    <div class="coin-wrapper">
+        <div id="lockMessage">UPGRADE NEEDED!</div>
+        <div id="clicker" class="skin-0" onclick="handleTap()">D</div>
     </div>
 
-    <div id="botModal" class="modal">
-        <h3 style="color:#ffd700;">🤖 AutoBot Upgrade</h3>
-        <p>Current Level: <span id="currentLvl">0</span></p>
-        <button id="upgradeBotBtn" class="btn-gold" onclick="upgradeBot()">Upgrade (500 🪙)</button>
-        <p onclick="closeModal('botModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Back</p>
+    <div id="shopModal" class="modal">
+        <h3 style="color:#ffd700;">🎨 Skin Shop</h3>
+        <p id="shopStatus">Upgrade your coin to continue!</p>
+        <button class="btn-shop" id="btnSkin1" onclick="buySkin(1, 20)">Buy Aqua Skin (20 🪙)</button>
+        <button class="btn-shop" id="btnSkin2" onclick="buySkin(2, 50)" style="display:none;">Buy Purple Skin (50 🪙)</button>
+        <p onclick="closeModal('shopModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Close</p>
     </div>
 
     <script>
+        // Истифодаи ҳамон танзимоти Firebase-и шумо
         const firebaseConfig = {
             apiKey: "AIzaSyBM9eh6zH_u0mk4G8YdZdyu0QFnw5bkbCI",
             authDomain: "dilik-game.firebaseapp.com",
@@ -79,80 +73,79 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const tg = window.Telegram.WebApp;
-        tg.expand();
-        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
         const userRef = database.ref('users/' + userId);
-        
-        let coins = 0; let botLevel = 0; const botPrices = [0, 500, 2000, 5000, 10000, 20000, 40000, 70000, 100000, 150000];
 
-        function updateLeague(amt) {
-            const league = document.getElementById('leagueName');
-            const box = document.getElementById('leagueBox');
-            if (amt < 30000) { league.innerText = "Bronze"; box.style.color = "#cd7f32"; }
-            else if (amt < 80000) { league.innerText = "Silver"; box.style.color = "#c0c0c0"; }
-            else if (amt < 150000) { league.innerText = "Gold"; box.style.color = "#ffd700"; }
-            else { league.innerText = "Platinum"; box.style.color = "#e5e4e2"; }
-        }
+        let coins = 0;
+        let currentSkin = 0;
+        let isLocked = false;
 
         userRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                coins = data.coins || 0; botLevel = data.botLevel || 0;
+                coins = data.coins || 0;
+                currentSkin = data.currentSkin || 0;
                 document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-                document.getElementById('botLvlMenu').innerText = botLevel;
-                document.getElementById('currentLvl').innerText = botLevel;
-                updateLeague(coins);
-                let nextPrice = botPrices[botLevel + 1];
-                document.getElementById('upgradeBotBtn').innerText = (botLevel >= 9) ? "Level 10 (Pay Admin)" : "Upgrade (" + nextPrice + " 🪙)";
-                
-                if (botLevel > 0 && data.lastLogin) {
-                    let seconds = Math.floor((Date.now() - data.lastLogin) / 1000);
-                    if (seconds > 30) {
-                        let earned = seconds * (botLevel * 0.1);
-                        coins += earned; userRef.update({ coins: coins, lastLogin: Date.now() });
-                    }
-                }
+                checkStatus();
             }
         });
 
-        document.getElementById('clicker').onclick = (e) => {
+        function checkStatus() {
+            const clicker = document.getElementById('clicker');
+            const lockMsg = document.getElementById('lockMessage');
+            const b1 = document.getElementById('btnSkin1');
+            const b2 = document.getElementById('btnSkin2');
+
+            // Танзими намуди танга
+            clicker.className = 'skin-' + currentSkin;
+
+            // МАНТИҚИ МАҲКАМШАВӢ (САНҶИШ)
+            if (coins >= 100 && currentSkin < 1) {
+                isLocked = true;
+                b1.style.display = 'block';
+            } else if (coins >= 500 && currentSkin < 2) {
+                isLocked = true;
+                b1.style.display = 'none';
+                b2.style.display = 'block';
+            } else {
+                isLocked = false;
+            }
+
+            if (isLocked) {
+                clicker.classList.add('locked');
+                lockMsg.style.display = 'block';
+            } else {
+                clicker.classList.remove('locked');
+                lockMsg.style.display = 'none';
+            }
+        }
+
+        function handleTap() {
+            if (isLocked) {
+                tg.HapticFeedback.notificationOccurred('error');
+                showModal('shopModal');
+                return;
+            }
             coins++;
-            document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-            userRef.update({ coins: coins, lastLogin: Date.now() });
+            userRef.update({ coins: coins });
             tg.HapticFeedback.impactOccurred('medium');
+        }
 
-            // Create +1 effect
-            const plus = document.createElement('div');
-            plus.innerText = '+1';
-            plus.className = 'plus-one';
-            plus.style.left = (e.clientX - 20) + 'px';
-            plus.style.top = (e.clientY - 40) + 'px';
-            document.body.appendChild(plus);
-            setTimeout(() => plus.remove(), 800);
-        };
-
-        function upgradeBot() {
-            if (botLevel >= 9) { alert("Contact @Dilik_admin for Level 10!"); return; }
-            let price = botPrices[botLevel + 1];
+        function buySkin(id, price) {
             if (coins >= price) {
-                coins -= price; botLevel++;
-                userRef.update({ coins: coins, botLevel: botLevel });
-                alert("Bot Upgraded! 🚀");
-            } else { alert("Not enough coins!"); }
+                coins -= price;
+                currentSkin = id;
+                userRef.update({ coins: coins, currentSkin: currentSkin });
+                alert("Skin Purchased! Game Resumed.");
+                closeModal('shopModal');
+            } else {
+                alert("Not enough coins!");
+            }
         }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
-        function showModal(id) { document.getElementById(id).style.display = 'block'; toggleSidebar(); }
+        function showModal(id) { document.getElementById(id).style.display = 'block'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function saveWallet() {
-            const addr = document.getElementById('walletAddr').value.trim();
-            if (addr.length > 8) { userRef.update({ wallet: addr }); alert("Wallet Saved! ✅"); closeModal('walletModal'); }
-        }
-        function inviteFriend() {
-            const link = "https://t.me/Dilik_gold_bot?start=" + userId;
-            tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent("Join me in Dilik Gold!"));
-        }
-        setInterval(() => { if(userId) userRef.update({ lastLogin: Date.now() }); }, 20000);
     </script>
 </body>
 </html>
