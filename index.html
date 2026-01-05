@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dilik Gold Test</title>
+    <title>Dilik Gold - Test Mode</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -13,25 +13,29 @@
         .menu-icon { position: absolute; top: 25px; left: 20px; font-size: 30px; cursor: pointer; z-index: 100; color: #ffd700; }
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 99; padding-top: 80px; border-right: 2px solid #ffd700; }
         .sidebar.active { left: 0; }
-        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; }
+        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; text-align: left; }
 
-        .league-container { margin-top: 80px; font-size: 24px; font-weight: bold; text-transform: uppercase; }
+        .league-container { margin-top: 80px; font-size: 24px; font-weight: bold; text-transform: uppercase; color: #cd7f32; }
         #coinCount { font-size: 60px; color: #ffd700; margin-top: 10px; font-weight: bold; }
         
         .coin-wrapper { margin-top: 60px; position: relative; display: inline-block; } 
-        #clicker { width: 220px; height: 220px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 100px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 10px solid; }
+        #clicker { width: 220px; height: 220px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 100px; font-weight: bold; cursor: pointer; transition: 0.2s; border: 10px solid; position: relative; z-index: 5; }
         
-        /* Рангҳои танга */
+        /* Skin Styles */
         .skin-0 { background: radial-gradient(circle, #ffcc33, #cc9900); border-color: #e6b800; color: #663300; }
         .skin-1 { background: radial-gradient(circle, #00ffcc, #0099cc); border-color: #00cccc; color: #003333; }
         .skin-2 { background: radial-gradient(circle, #ff33ec, #9900cc); border-color: #cc00bb; color: #330033; }
 
-        /* Эффекти маҳкамшавӣ */
-        #clicker.locked { filter: grayscale(1) brightness(0.5); cursor: not-allowed; }
-        #lockMessage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: red; color: white; padding: 10px; border-radius: 8px; font-weight: bold; z-index: 20; display: none; width: 160px; }
+        /* Locked State */
+        #clicker.locked { filter: grayscale(1) brightness(0.4); cursor: not-allowed; }
+        #lockMessage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #ff4444; color: white; padding: 10px 15px; border-radius: 10px; font-weight: bold; z-index: 20; display: none; width: 180px; box-shadow: 0 0 15px rgba(255,0,0,0.5); }
 
         .modal { display: none; position: fixed; top: 35%; left: 50%; transform: translate(-50%, -35%); background: #001c3d; padding: 25px; border-radius: 20px; width: 80%; z-index: 1001; border: 2px solid #ffd700; }
-        .btn-shop { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-shop { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; margin-top: 15px; cursor: pointer; font-size: 16px; }
+        
+        /* Plus One Animation */
+        .plus-one { position: absolute; color: #ffd700; font-size: 26px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s ease-out forwards; z-index: 50; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
     </style>
 </head>
 <body>
@@ -40,6 +44,7 @@
 
     <div class="sidebar" id="sidebar">
         <a href="#" onclick="showModal('shopModal')">🎨 Skin Shop</a>
+        <a href="#" onclick="showModal('walletModal')">👛 Wallet</a>
         <a href="#" onclick="toggleSidebar()" style="color: #ff8888; margin-top: 20px;">❌ Close</a>
     </div>
 
@@ -47,20 +52,29 @@
     <div id="coinCount">0</div>
 
     <div class="coin-wrapper">
-        <div id="lockMessage">UPGRADE NEEDED!</div>
-        <div id="clicker" class="skin-0" onclick="handleTap()">D</div>
+        <div id="lockMessage">UPGRADE REQUIRED!</div>
+        <div id="clicker" class="skin-0">D</div>
     </div>
 
     <div id="shopModal" class="modal">
-        <h3 style="color:#ffd700;">🎨 Skin Shop</h3>
-        <p id="shopStatus">Upgrade your coin to continue!</p>
-        <button class="btn-shop" id="btnSkin1" onclick="buySkin(1, 20)">Buy Aqua Skin (20 🪙)</button>
-        <button class="btn-shop" id="btnSkin2" onclick="buySkin(2, 50)" style="display:none;">Buy Purple Skin (50 🪙)</button>
-        <p onclick="closeModal('shopModal')" style="color:#ff4444; margin-top:15px; cursor:pointer;">Close</p>
+        <h2 style="color:#ffd700; margin-top:0;">🎨 Skin Shop</h2>
+        <p id="shopDesc">Upgrade your coin appearance to unlock more levels!</p>
+        
+        <div id="skinButtons">
+            <button class="btn-shop" id="btnSkin1" onclick="buySkin(1, 20)">Buy Aqua Skin (20 🪙)</button>
+            <button class="btn-shop" id="btnSkin2" onclick="buySkin(2, 50)" style="display:none;">Buy Purple Skin (50 🪙)</button>
+        </div>
+        
+        <p onclick="closeModal('shopModal')" style="color:#ff4444; margin-top:20px; cursor:pointer; font-weight:bold;">CLOSE</p>
+    </div>
+
+    <div id="walletModal" class="modal">
+        <h2 style="color:#ffd700;">Wallet</h2>
+        <p>Your address will appear here.</p>
+        <button class="btn-shop" onclick="closeModal('walletModal')">BACK</button>
     </div>
 
     <script>
-        // Истифодаи ҳамон танзимоти Firebase-и шумо
         const firebaseConfig = {
             apiKey: "AIzaSyBM9eh6zH_u0mk4G8YdZdyu0QFnw5bkbCI",
             authDomain: "dilik-game.firebaseapp.com",
@@ -73,7 +87,9 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const tg = window.Telegram.WebApp;
-        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
+        tg.expand();
+
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "tester_" + Math.floor(Math.random()*1000);
         const userRef = database.ref('users/' + userId);
 
         let coins = 0;
@@ -86,27 +102,29 @@
                 coins = data.coins || 0;
                 currentSkin = data.currentSkin || 0;
                 document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-                checkStatus();
+                updateUI();
+            } else {
+                userRef.set({ coins: 0, currentSkin: 0 });
             }
         });
 
-        function checkStatus() {
+        function updateUI() {
             const clicker = document.getElementById('clicker');
             const lockMsg = document.getElementById('lockMessage');
-            const b1 = document.getElementById('btnSkin1');
-            const b2 = document.getElementById('btnSkin2');
+            const btn1 = document.getElementById('btnSkin1');
+            const btn2 = document.getElementById('btnSkin2');
 
-            // Танзими намуди танга
             clicker.className = 'skin-' + currentSkin;
 
-            // МАНТИҚИ МАҲКАМШАВӢ (САНҶИШ)
+            // МАНТИҚИ МАҲКАМШАВИИ САНҶИШӢ
             if (coins >= 100 && currentSkin < 1) {
                 isLocked = true;
-                b1.style.display = 'block';
+                btn1.style.display = 'block';
+                btn2.style.display = 'none';
             } else if (coins >= 500 && currentSkin < 2) {
                 isLocked = true;
-                b1.style.display = 'none';
-                b2.style.display = 'block';
+                btn1.style.display = 'none';
+                btn2.style.display = 'block';
             } else {
                 isLocked = false;
             }
@@ -120,31 +138,42 @@
             }
         }
 
-        function handleTap() {
+        document.getElementById('clicker').onclick = (e) => {
             if (isLocked) {
-                tg.HapticFeedback.notificationOccurred('error');
+                tg.HapticFeedback.notificationOccurred('warning');
                 showModal('shopModal');
                 return;
             }
+
             coins++;
             userRef.update({ coins: coins });
-            tg.HapticFeedback.impactOccurred('medium');
-        }
+            tg.HapticFeedback.impactOccurred('light');
+
+            // +1 Animation
+            const plus = document.createElement('div');
+            plus.innerText = '+1';
+            plus.className = 'plus-one';
+            plus.style.left = (e.clientX - 10) + 'px';
+            plus.style.top = (e.clientY - 20) + 'px';
+            document.body.appendChild(plus);
+            setTimeout(() => plus.remove(), 700);
+        };
 
         function buySkin(id, price) {
             if (coins >= price) {
                 coins -= price;
                 currentSkin = id;
                 userRef.update({ coins: coins, currentSkin: currentSkin });
-                alert("Skin Purchased! Game Resumed.");
+                tg.HapticFeedback.notificationOccurred('success');
+                alert("Skin Upgraded! Now you can continue.");
                 closeModal('shopModal');
             } else {
-                alert("Not enough coins!");
+                alert("Not enough coins for this skin!");
             }
         }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
-        function showModal(id) { document.getElementById(id).style.display = 'block'; }
+        function showModal(id) { document.getElementById(id).style.display = 'block'; if(id==='shopModal') toggleSidebar(); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     </script>
 </body>
