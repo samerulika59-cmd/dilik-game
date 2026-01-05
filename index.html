@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="tg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dilik Clicker Pro</title>
+    <style>
+        :root { --main-bg: #020617; --accent: #ffd700; --sidebar-bg: #1e293b; }
+        body { background: var(--main-bg); color: white; text-align: center; font-family: sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Меню ва Сидебар */
+        .menu-icon { position: absolute; top: 20px; left: 20px; font-size: 32px; cursor: pointer; z-index: 100; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: var(--sidebar-bg); transition: 0.3s; z-index: 99; text-align: left; padding: 80px 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        .sidebar.active { left: 0; }
+        .side-item { margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 98; }
+        .overlay.active { display: block; }
+
+        /* Нишондиҳандаҳо */
+        .header { margin-top: 60px; }
+        #rank { font-size: 24px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; }
+        #balance { font-size: 55px; font-weight: 900; margin: 0; }
+        .progress-bar { width: 260px; height: 10px; background: #334155; border-radius: 10px; margin: 15px auto; overflow: hidden; }
+        #fill { width: 0%; height: 100%; background: var(--accent); transition: 0.3s; }
+
+        /* Майдони бозӣ */
+        .game-area { margin-top: auto; margin-bottom: 60px; }
+        .coin { 
+            width: 220px; height: 220px; border-radius: 50%; 
+            background: linear-gradient(135deg, #fcd34d, #d97706); 
+            border: 10px solid #b45309; display: flex; align-items: center; 
+            justify-content: center; font-size: 100px; font-weight: bold; 
+            color: #78350f; box-shadow: 0 10px 0 #78350f; 
+            cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .coin:active { transform: translateY(5px); box-shadow: 0 5px 0 #78350f; }
+        .click-text { margin-top: 25px; font-size: 20px; font-weight: bold; color: #94a3b8; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; color: var(--accent); } }
+    </style>
+</head>
+<body>
+
+    <div class="menu-icon" onclick="toggleMenu()">☰</div>
+    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <h2 style="color:var(--accent)">Dilik Store</h2>
+        <div class="side-item" onclick="buyBot()">
+            <b>🤖 Хариди Бот (Офлайн)</b><br>
+            <span id="bot-cost">Нарх: 100 💰</span><br>
+            <small id="bot-level">Сатҳ: 0</small>
+        </div>
+        <div class="side-item" onclick="inviteFriend()">
+            <b>🤝 Даъвати дӯст</b><br>
+            <small>Гирифтани бонус</small>
+        </div>
+    </div>
+
+    <div class="header">
+        <div id="rank">БРОНЗА</div>
+        <div id="balance">0</div>
+        <div class="progress-bar"><div id="fill"></div></div>
+    </div>
+
+    <div class="game-area">
+        <div class="coin" id="coin">D</div>
+        <div class="click-text">Зер кун ва пул ба даст ор!</div>
+    </div>
+
+    <script>
+        let score = parseFloat(localStorage.getItem('dilik_score')) || 0;
+        let bots = parseInt(localStorage.getItem('dilik_bots')) || 0;
+        let lastTime = parseInt(localStorage.getItem('dilik_time')) || Date.now();
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function updateUI() {
+            document.getElementById('balance').innerText = Math.floor(score).toLocaleString();
+            let cost = 100 + (bots * 300); 
+            document.getElementById('bot-cost').innerText = "Нарх: " + cost.toLocaleString() + " 💰";
+            document.getElementById('bot-level').innerText = "Сатҳи бот: " + bots;
+            
+            let rankName = "БРОНЗА", color = "#cd7f32", next = 1000, start = 0;
+            if (score >= 50000) { rankName = "ПЛАТИНУМ"; color = "#e5e4e2"; next = 1000000; start = 50000; }
+            else if (score >= 30000) { rankName = "ТИЛЛО"; color = "#ffd700"; next = 50000; start = 30000; }
+            else if (score >= 10000) { rankName = "НУҚРА"; color = "#c0c0c0"; next = 30000; start = 10000; }
+            else if (score >= 1000) { rankName = "НУҚРА"; color = "#c0c0c0"; next = 10000; start = 1000; }
+
+            const rEl = document.getElementById('rank');
+            rEl.innerText = rankName; rEl.style.color = color;
+            const fEl = document.getElementById('fill');
+            fEl.style.backgroundColor = color;
+            fEl.style.width = Math.min(((score - start) / (next - start)) * 100, 100) + "%";
+            
+            localStorage.setItem('dilik_score', score);
+            localStorage.setItem('dilik_bots', bots);
+            localStorage.setItem('dilik_time', Date.now());
+        }
+
+        document.getElementById('coin').onclick = () => {
+            score++; updateUI();
+            if(navigator.vibrate) navigator.vibrate(35);
+        };
+
+        function buyBot() {
+            let cost = 100 + (bots * 300);
+            if (score >= cost) { score -= cost; bots++; updateUI(); }
+            else { alert("Маблағи кофӣ нест!"); }
+        }
+
+        function inviteFriend() {
+            prompt("Истиноди бозиро ба дӯстон фиристед:", window.location.href);
+        }
+
+        // Логикаи Офлайн
+        function checkOffline() {
+            let now = Date.now();
+            let seconds = Math.floor((now - lastTime) / 1000);
+            if (bots > 0 && seconds > 10) {
+                let earned = seconds * bots;
+                score += earned;
+                alert("Боти Dilik дар вақти набудани шумо " + earned + " танга ҷамъ кард!");
+                updateUI();
+            }
+        }
+
+        setInterval(() => { if(bots > 0) { score += bots; updateUI(); } }, 1000);
+        window.onload = checkOffline;
+        updateUI();
+    </script>
+</body>
+</html>
