@@ -29,15 +29,17 @@
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1050; }
         .btn-gold { background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
         
-        .tap-number { position: absolute; color: #ffd700; font-size: 35px; font-weight: 900; pointer-events: none; animation: moveUp 0.8s ease-out forwards; z-index: 10; }
-        @keyframes moveUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
-        
         #ad-banner { display: none; background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; padding: 10px; margin: 10px; border-radius: 10px; color: #ffd700; font-weight: bold; }
         .skin-box { background: #002b5c; padding: 10px; border-radius: 15px; border: 1px solid #ffd700; }
 
-        /* Wheel Animation Styles */
-        #wheel-container { position: relative; width: 200px; height: 200px; margin: 0 auto; border: 5px solid #ffd700; border-radius: 50%; overflow: hidden; transition: transform 3s cubic-bezier(0.15, 0, 0.15, 1); }
-        .wheel-part { position: absolute; width: 100%; height: 100%; background: conic-gradient(#ffd700 0% 25%, #cc9900 25% 50%, #ffd700 50% 75%, #cc9900 75% 100%); }
+        /* --- LUCKY WHEEL STYLES --- */
+        .wheel-wrapper { position: relative; width: 260px; height: 260px; margin: 20px auto; }
+        #wheel-container { width: 100%; height: 100%; border-radius: 50%; border: 8px solid #ffd700; position: relative; overflow: hidden; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); background: #cc9900; box-shadow: 0 0 20px #ffd700; }
+        .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; background: #ff4444; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 20; }
+        .segment { position: absolute; width: 50%; height: 50%; transform-origin: 100% 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: #000; border: 1px solid rgba(0,0,0,0.1); }
+        /* Секторҳо бо рангҳои гуногун */
+        .segment:nth-child(odd) { background: #ffd700; }
+        .segment:nth-child(even) { background: #e6b800; }
     </style>
 </head>
 <body>
@@ -75,23 +77,28 @@
 
     <div id="luckyWheelModal" class="modal">
         <h2>🎰 LUCKY WHEEL</h2>
-        <p>Try your luck for 5,000 coins!</p>
-        <div id="wheel-container"><div class="wheel-part"></div></div>
+        <div class="wheel-wrapper">
+            <div class="wheel-pointer"></div>
+            <div id="wheel-container">
+                <div class="segment" style="transform: rotate(0deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">1M</span></div>
+                <div class="segment" style="transform: rotate(45deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">0</span></div>
+                <div class="segment" style="transform: rotate(90deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">5k</span></div>
+                <div class="segment" style="transform: rotate(135deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">500</span></div>
+                <div class="segment" style="transform: rotate(180deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">50k</span></div>
+                <div class="segment" style="transform: rotate(225deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">0</span></div>
+                <div class="segment" style="transform: rotate(270deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">10k</span></div>
+                <div class="segment" style="transform: rotate(315deg) skewY(-45deg);"><span style="transform: skewY(45deg) rotate(22.5deg); margin-left: 40px;">2k</span></div>
+            </div>
+        </div>
         <button id="spinBtn" class="btn-gold" onclick="spinWheel()">SPIN (5,000)</button>
         <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button>
     </div>
 
-    <div id="turboModal" class="modal">
-        <h2>🔥 TURBO MODE</h2>
-        <p>Cost: 10,000 | Effect: +5 per tap | Duration: 1 hour</p>
-        <button id="buyTurboBtn" class="btn-gold" onclick="buyTurbo()">ACTIVATE</button>
-        <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button>
-    </div>
-
-    <div id="skinModal" class="modal"><h2>🎨 SKIN SHOP</h2><div id="skinGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div><button class="btn-gold" style="background:#444; color:#fff; margin-top: 15px;" onclick="closeAll()">CLOSE</button></div>
-    <div id="upgradeModal" class="modal"><h2>🚀 UPGRADE</h2><p>Level: <b id="lvlNow">1</b> / 5</p><button id="upBtn" class="btn-gold" onclick="doUpgrade()">UPGRADE</button><button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">BACK</button></div>
-    <div id="adminModal" class="modal"><h2>🛠 ADMIN PANEL</h2><textarea id="adMsg" style="width:100%; height:60px;"></textarea><button class="btn-gold" onclick="sendAd()">📢 SEND AD</button><button class="btn-gold" onclick="clearAd()" style="background:#ff4444; color:#fff;">🗑 DELETE AD</button><button class="btn-gold" onclick="add100k()" style="background:#222; color:#0f0;">+100K TEST</button><button class="btn-gold" style="background:#444;" onclick="closeAll()">BACK</button></div>
-    <div id="walletModal" class="modal"><h2>👛 WALLET</h2><input type="text" id="walletInput" placeholder="UQ..." style="width:100%; padding:10px;"><button class="btn-gold" onclick="saveWallet()">SAVE</button><button class="btn-gold" style="background:#444;" onclick="closeAll()">BACK</button></div>
+    <div id="turboModal" class="modal"><h2>🔥 TURBO</h2><button id="buyTurboBtn" class="btn-gold" onclick="buyTurbo()">ACTIVATE</button><button class="btn-gold" style="background:#444;" onclick="closeAll()">CLOSE</button></div>
+    <div id="skinModal" class="modal"><h2>🎨 SKINS</h2><div id="skinGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div><button class="btn-gold" style="background:#444;" onclick="closeAll()">CLOSE</button></div>
+    <div id="upgradeModal" class="modal"><h2>🚀 UPGRADE</h2><p>Level: <b id="lvlNow">1</b></p><button id="upBtn" class="btn-gold" onclick="doUpgrade()">UPGRADE</button><button class="btn-gold" style="background:#444;" onclick="closeAll()">BACK</button></div>
+    <div id="adminModal" class="modal"><h2>🛠 ADMIN</h2><textarea id="adMsg" style="width:100%;height:50px;"></textarea><button class="btn-gold" onclick="sendAd()">SEND</button><button class="btn-gold" onclick="clearAd()" style="background:#f44;">DELETE AD</button><button class="btn-gold" onclick="add100k()" style="background:#222;">+100K</button><button class="btn-gold" style="background:#444;" onclick="closeAll()">BACK</button></div>
+    <div id="walletModal" class="modal"><h2>👛 WALLET</h2><input type="text" id="walletInput" style="width:100%;padding:10px;"><button class="btn-gold" onclick="saveWallet()">SAVE</button></div>
     <div id="leaderboardModal" class="modal"><h2>🏆 TOP 10</h2><div id="leaderList"></div><button class="btn-gold" style="background:#444;" onclick="closeAll()">CLOSE</button></div>
 
     <script>
@@ -104,7 +111,6 @@
 
         let data = { coins: 0, tapLvl: 0, turboEnd: 0, activeSkin: "D", ownedSkins: ["D"], wallet: "", lastLeaderboardPayDate: "", joinedChannel: false };
         let isReady = false;
-
         const costs = [3000, 8000, 15000, 25000, 45000];
         const skins = [{id: "D", p: 0}, {id: "₿", p: 50000}, {id: "💎", p: 100000}, {id: "🥇", p: 25000}, {id: "🥈", p: 10000}, {id: "🚀", p: 75000}, {id: "🔥", p: 40000}, {id: "🌟", p: 20000}, {id: "💰", p: 15000}, {id: "👑", p: 90000}, {id: "🍎", p: 30000}, {id: "⚡", p: 55000}];
 
@@ -128,7 +134,7 @@
             document.getElementById('clicker').innerText = data.activeSkin;
             document.getElementById('lvlNow').innerText = data.tapLvl + 1;
             if(data.tapLvl < 5) document.getElementById('upBtn').innerText = `UPGRADE (${costs[data.tapLvl].toLocaleString()})`;
-            else document.getElementById('upBtn').innerText = "MAX LEVEL";
+            else document.getElementById('upBtn').innerText = "MAX";
             if(uId == ADMIN_ID) document.getElementById('adminLink').style.display = 'block';
             renderSkins();
             checkTurboStatus();
@@ -142,16 +148,14 @@
                 let min = Math.floor(diff / 60000); let sec = Math.floor((diff % 60000) / 1000);
                 timerDiv.innerText = `🔥 TURBO: ${min}:${sec < 10 ? '0' : ''}${sec}`;
                 timerDiv.style.display = 'block';
-                document.getElementById('turboBtnMenu').innerText = `🔥 Turbo Active (${min}m)`;
-                document.getElementById('buyTurboBtn').disabled = true;
+                document.getElementById('turboBtnMenu').innerText = `🔥 Active (${min}m)`;
             } else {
                 timerDiv.style.display = 'none';
                 document.getElementById('turboBtnMenu').innerText = "🔥 Turbo Mode (10k)";
-                document.getElementById('buyTurboBtn').disabled = false;
             }
         }
 
-        // SECRET WHEEL LOGIC
+        // --- МАҲДУДИЯТИ МАХФӢ ДАР ИНҶОСТ ---
         function spinWheel() {
             if (data.coins < 5000) { alert("Not enough coins!"); return; }
             const btn = document.getElementById('spinBtn');
@@ -160,7 +164,7 @@
             uRef.update({ coins: data.coins });
 
             const wheel = document.getElementById('wheel-container');
-            const randomRotation = 1800 + Math.random() * 360;
+            const randomRotation = 1800 + Math.floor(Math.random() * 360);
             wheel.style.transform = `rotate(${randomRotation}deg)`;
 
             setTimeout(() => {
@@ -168,24 +172,24 @@
                 let chance = Math.random() * 100;
                 
                 if (uId == ADMIN_ID) {
-                    if (chance > 80) winAmount = 1000000; // Admin gets Jackpot
+                    if (chance > 80) winAmount = 1000000; // Админ Jackpot мегирад
                     else winAmount = 10000;
                 } else {
-                    // USER ALWAYS LOSES OR GETS TRIVIAL AMOUNT
-                    if (chance > 60) winAmount = 0; // 60% Lose all
-                    else if (chance > 10) winAmount = 500; // 50% tiny win
-                    else winAmount = 2500; // 10% half back
+                    // МУШТАРИИ ОДДӢ ҲЕҶ ГОҲ 1M НАМЕБАРАД
+                    if (chance > 60) winAmount = 0; 
+                    else if (chance > 20) winAmount = 500; 
+                    else winAmount = 2500; 
                 }
 
                 data.coins += winAmount;
                 uRef.update({ coins: data.coins });
-                alert(winAmount > 0 ? `You won ${winAmount.toLocaleString()} coins!` : "Better luck next time!");
+                alert(winAmount > 0 ? `You won ${winAmount.toLocaleString()} coins!` : "No luck! Try again.");
                 wheel.style.transition = "none";
                 wheel.style.transform = "rotate(0deg)";
-                setTimeout(() => wheel.style.transition = "transform 3s cubic-bezier(0.15, 0, 0.15, 1)", 50);
+                setTimeout(() => wheel.style.transition = "transform 4s cubic-bezier(0.15, 0, 0.15, 1)", 50);
                 btn.disabled = false;
                 updateUI();
-            }, 3000);
+            }, 4000);
         }
 
         function handleTap(e) {
@@ -199,10 +203,10 @@
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        // Original functions preserved 100%
+        // --- ДИГАР ФУНКСИЯҲОИ АСЛӢ ---
         function sendAd() { const msg = document.getElementById('adMsg').value; if(msg.trim()) globalRef.update({ ad_text: msg }); }
-        function clearAd() { globalRef.update({ ad_text: "" }); document.getElementById('adMsg').value = ""; alert("Ad deleted!"); }
-        function showLeaderboard() { const now = new Date(); const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate(); if (data.lastLeaderboardPayDate === todayStr) loadAndShowLeaderboard(); else if (confirm("View Top 10 costs 8,000 coins?")) { if (data.coins >= 8000) { data.coins -= 8000; data.lastLeaderboardPayDate = todayStr; uRef.update({ coins: data.coins, lastLeaderboardPayDate: todayStr }); loadAndShowLeaderboard(); } } }
+        function clearAd() { globalRef.update({ ad_text: "" }); alert("Ad deleted!"); }
+        function showLeaderboard() { const now = new Date(); const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate(); if (data.lastLeaderboardPayDate === todayStr) loadAndShowLeaderboard(); else if (confirm("View Top 10 costs 8,000?")) { if (data.coins >= 8000) { data.coins -= 8000; data.lastLeaderboardPayDate = todayStr; uRef.update({ coins: data.coins, lastLeaderboardPayDate: todayStr }); loadAndShowLeaderboard(); } } }
         function loadAndShowLeaderboard() { showM('leaderboardModal'); firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', s => { let l = ""; let players = []; s.forEach(c => { players.push(c.val()); }); players.reverse().forEach((p, i) => { let r = i===0?"🥇":i===1?"🥈":i===2?"🥉":""; l += `<div style="padding:8px; border-bottom:1px solid #333">${i+1}. ${p.name || 'User'}: ${Math.floor(p.coins).toLocaleString()} ${r}</div>`; }); document.getElementById('leaderList').innerHTML = l; }); }
         function buyTurbo() { if(data.coins >= 10000) { data.coins -= 10000; data.turboEnd = Date.now() + 3600000; uRef.update({ coins: data.coins, turboEnd: data.turboEnd }); closeAll(); } }
         function joinChannel() { tg.openTelegramLink("https://t.me/DILIK_officia"); if(!data.joinedChannel) { data.coins += 5000; data.joinedChannel = true; uRef.update({ coins: data.coins, joinedChannel: true }); } }
