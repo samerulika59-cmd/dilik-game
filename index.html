@@ -11,10 +11,31 @@
         * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; outline: none; }
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         .click-area { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; }
-        /* Style for loading state */
-        #clicker { width: 220px; height: 220px; background: radial-gradient(circle, #ffcc33 0%, #cc9900 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 90px; color: #663300; font-weight: bold; border: 10px solid #e6b800; box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); cursor: pointer; transition: 0.2s; position: relative; z-index: 5; opacity: 0.3; }
-        #clicker.ready { opacity: 1; transform: scale(1); }
-        #clicker:active.ready { transform: scale(0.92); }
+        
+        /* Стили тугмаи асосӣ */
+        #clicker { 
+            width: 220px; height: 220px; 
+            background: radial-gradient(circle, #ffcc33 0%, #cc9900 100%); 
+            border-radius: 50%; display: none; /* Дар аввал пинҳон аст */
+            align-items: center; justify-content: center; 
+            font-size: 90px; color: #663300; font-weight: bold; 
+            border: 10px solid #e6b800; box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); 
+            cursor: pointer; transition: transform 0.05s; z-index: 5; 
+        }
+        #clicker:active { transform: scale(0.92); }
+
+        /* Стили Лоадер (Соат) */
+        #loader {
+            width: 100px; height: 100px;
+            border: 8px solid #002b5c;
+            border-top: 8px solid #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .loading-text { margin-top: 20px; font-weight: bold; color: #ffd700; }
+
         .tap-number { position: absolute; color: #ffd700; font-size: 35px; font-weight: 900; pointer-events: none; animation: moveUp 0.8s ease-out forwards; z-index: 10; }
         @keyframes moveUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #00152e; transition: 0.3s; z-index: 1000; border-right: 2px solid #ffd700; padding-top: 50px; }
@@ -49,56 +70,25 @@
             <span></span>
         </div>
         <div id="ad-banner"></div>
-        <div id="balance" style="font-size: 45px; color: #ffd700; font-weight: bold;">Syncing...</div>
+        <div id="balance" style="font-size: 45px; color: #ffd700; font-weight: bold;">WAIT...</div>
     </div>
 
-    <div class="click-area">
+    <div class="click-area" id="mainArea">
+        <div id="loadingContainer">
+            <div id="loader"></div>
+            <div class="loading-text">LOADING DATA...</div>
+        </div>
         <div id="clicker" onclick="handleTap(event)">D</div>
     </div>
 
     <div id="overlay" class="overlay" onclick="closeAll()"></div>
 
-    <div id="skinModal" class="modal">
-        <h2>🎨 SKIN SHOP</h2>
-        <div class="skin-container" id="skinGrid"></div>
-        <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button>
-    </div>
-
-    <div id="upgradeModal" class="modal">
-        <h2>🚀 UPGRADE TAP</h2>
-        <p>Level: <b id="lvlNow">1</b> / 5</p>
-        <button id="upBtn" class="btn-gold" onclick="doUpgrade()">UPGRADE</button>
-        <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">BACK</button>
-    </div>
-
-    <div id="turboModal" class="modal">
-        <h2>🔥 TURBO MODE</h2>
-        <p>Cost: 10,000 | Effect: +5 per tap | Duration: 1 hour</p>
-        <button class="btn-gold" onclick="buyTurbo()">ACTIVATE</button>
-        <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button>
-    </div>
-
-    <div id="adminModal" class="modal">
-        <h2>🛠 ADMIN PANEL</h2>
-        <textarea id="adMsg" placeholder="Type ad message..." style="width:100%; height:80px; margin-bottom:10px; border-radius:10px; border:none; padding:5px;"></textarea>
-        <button class="btn-gold" onclick="sendAd()">📢 SEND AD</button>
-        <button class="btn-gold" onclick="clearAd()" style="background:#ff4444; color:#fff;">🗑 DELETE AD</button>
-        <button class="btn-gold" onclick="add100k()" style="background:#222; color:#00ff00;">+100K TEST COINS</button>
-        <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button>
-    </div>
-
-    <div id="walletModal" class="modal">
-        <h2>👛 TON WALLET</h2>
-        <input type="text" id="walletInput" placeholder="Address UQ..." style="width:100%; padding:10px; margin-bottom:10px; border-radius:10px; border:none;">
-        <button class="btn-gold" onclick="saveWallet()">SAVE ADDRESS</button>
-        <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">BACK</button>
-    </div>
-
-    <div id="leaderboardModal" class="modal">
-        <h2>🏆 TOP 10 PLAYERS</h2>
-        <div id="leaderList" style="text-align: left; margin-top:10px;"></div>
-        <button class="btn-gold" onclick="closeAll()">CLOSE</button>
-    </div>
+    <div id="skinModal" class="modal"><h2>🎨 SKIN SHOP</h2><div class="skin-container" id="skinGrid"></div><button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button></div>
+    <div id="upgradeModal" class="modal"><h2>🚀 UPGRADE</h2><p>Level: <b id="lvlNow">1</b> / 5</p><button id="upBtn" class="btn-gold" onclick="doUpgrade()">UPGRADE</button><button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">BACK</button></div>
+    <div id="turboModal" class="modal"><h2>🔥 TURBO MODE</h2><p>Cost: 10,000 | +5 per tap</p><button class="btn-gold" onclick="buyTurbo()">ACTIVATE</button><button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button></div>
+    <div id="adminModal" class="modal"><h2>🛠 ADMIN</h2><textarea id="adMsg" style="width:100%; height:80px; margin-bottom:10px; border-radius:10px; padding:5px;"></textarea><button class="btn-gold" onclick="sendAd()">📢 SEND AD</button><button class="btn-gold" onclick="clearAd()" style="background:#ff4444; color:#fff;">🗑 DELETE AD</button><button class="btn-gold" onclick="add100k()" style="background:#222; color:#00ff00;">+100K TEST</button><button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button></div>
+    <div id="walletModal" class="modal"><h2>👛 WALLET</h2><input type="text" id="walletInput" placeholder="Address..." style="width:100%; padding:10px; margin-bottom:10px;"><button class="btn-gold" onclick="saveWallet()">SAVE</button><button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">BACK</button></div>
+    <div id="leaderboardModal" class="modal"><h2>🏆 TOP 10</h2><div id="leaderList" style="text-align: left; margin-top:10px;"></div><button class="btn-gold" onclick="closeAll()">CLOSE</button></div>
 
     <script>
         const tg = window.Telegram.WebApp;
@@ -109,7 +99,7 @@
         const globalRef = firebase.database().ref('global_config');
 
         let data = { coins: 0, tapLvl: 0, turboEnd: 0, activeSkin: "D", ownedSkins: ["D"], wallet: "", lastLeaderboardPayDate: "", joinedChannel: false };
-        let dataLoaded = false; // Flag to prevent coin loss
+        let isReady = false;
 
         const costs = [3000, 8000, 15000, 25000, 45000];
         const skins = [
@@ -118,27 +108,26 @@
             {id: "💰", p: 15000}, {id: "👑", p: 90000}, {id: "🍎", p: 30000}, {id: "⚡", p: 55000}
         ];
 
-        // Fetch user data with loading check
-        uRef.on('value', s => { 
-            if(s.val()) { 
-                data = {...data, ...s.val()}; 
-            } else {
-                uRef.set(data);
-            }
-            dataLoaded = true; // Data is ready!
-            document.getElementById('clicker').classList.add('ready');
-            updateUI(); 
+        uRef.on('value', s => {
+            if(s.val()) data = {...data, ...s.val()};
+            else uRef.set(data);
+            
+            // МАЪЛУМОТ ОМАД: Лоадерро нест мекунем ва тугмаро нишон медиҳем
+            isReady = true;
+            document.getElementById('loadingContainer').style.display = 'none';
+            document.getElementById('clicker').style.display = 'flex';
+            updateUI();
         });
 
         globalRef.on('value', s => {
             const g = s.val();
             const banner = document.getElementById('ad-banner');
             if(g && g.ad_text) { banner.innerText = "📢 " + g.ad_text; banner.style.display = 'block'; }
-            else { banner.style.display = 'none'; }
+            else banner.style.display = 'none';
         });
 
         function updateUI() {
-            if(!dataLoaded) return;
+            if(!isReady) return;
             document.getElementById('balance').innerText = Math.floor(data.coins).toLocaleString();
             document.getElementById('clicker').innerText = data.activeSkin;
             document.getElementById('lvlNow').innerText = data.tapLvl + 1;
@@ -149,12 +138,10 @@
         }
 
         function handleTap(e) {
-            if(!dataLoaded) return; // DO NOTHING IF DATA NOT LOADED
-            
+            if(!isReady) return;
             const gain = (1 + data.tapLvl) + (Date.now() < data.turboEnd ? 5 : 0);
             data.coins += gain;
             uRef.update({ coins: data.coins, name: tg.initDataUnsafe.user?.first_name || "User" });
-            
             const n = document.createElement('div'); n.className = 'tap-number'; n.innerText = `+${gain}`;
             n.style.left = `${e.clientX - 20}px`; n.style.top = `${e.clientY - 40}px`;
             document.body.appendChild(n); setTimeout(() => n.remove(), 800);
@@ -163,27 +150,25 @@
 
         function joinChannel() {
             tg.openTelegramLink("https://t.me/DILIK_officia");
-            if(!data.joinedChannel && dataLoaded) {
-                data.coins += 5000;
-                data.joinedChannel = true;
+            if(!data.joinedChannel && isReady) {
+                data.coins += 5000; data.joinedChannel = true;
                 uRef.update({ coins: data.coins, joinedChannel: true });
                 alert("Bonus 5,000 coins added!");
             }
         }
 
         function showLeaderboard() {
-            if(!dataLoaded) return;
+            if(!isReady) return;
             const now = new Date();
             const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
-            if (data.lastLeaderboardPayDate === todayStr) { loadAndShowLeaderboard(); } 
+            if (data.lastLeaderboardPayDate === todayStr) loadAndShowLeaderboard();
             else {
-                if (confirm("View Top 10 costs 8,000 coins for 24 hours. Proceed?")) {
+                if (confirm("View Top 10 costs 8,000 coins. Proceed?")) {
                     if (data.coins >= 8000) {
-                        data.coins -= 8000;
-                        data.lastLeaderboardPayDate = todayStr;
+                        data.coins -= 8000; data.lastLeaderboardPayDate = todayStr;
                         uRef.update({ coins: data.coins, lastLeaderboardPayDate: todayStr });
                         loadAndShowLeaderboard();
-                    } else { alert("Not enough coins!"); }
+                    } else alert("Not enough coins!");
                 }
             }
         }
@@ -198,14 +183,14 @@
                     if(i === 0) rankLabel = " <b style='color:#ffd700'>(🥇 Gold)</b>";
                     else if(i === 1) rankLabel = " <b style='color:#c0c0c0'>(🥈 Silver)</b>";
                     else if(i === 2) rankLabel = " <b style='color:#cd7f32'>(🥉 Bronze)</b>";
-                    l += `<div style="padding:8px; border-bottom:1px solid #333; font-size:14px">${i+1}. ${p.name || 'User'}: ${Math.floor(p.coins).toLocaleString()} ${rankLabel}</div>`;
+                    l += `<div style="padding:8px; border-bottom:1px solid #333">${i+1}. ${p.name || 'User'}: ${Math.floor(p.coins).toLocaleString()} ${rankLabel}</div>`;
                 });
                 document.getElementById('leaderList').innerHTML = l;
             });
         }
 
-        function doUpgrade() { if(dataLoaded && data.tapLvl < 5 && data.coins >= costs[data.tapLvl]) uRef.update({ coins: data.coins - costs[data.tapLvl], tapLvl: data.tapLvl + 1 }); }
-        function buyTurbo() { if(dataLoaded && data.coins >= 10000) { uRef.update({ coins: data.coins - 10000, turboEnd: Date.now() + 3600000 }); closeAll(); } }
+        function doUpgrade() { if(isReady && data.tapLvl < 5 && data.coins >= costs[data.tapLvl]) uRef.update({ coins: data.coins - costs[data.tapLvl], tapLvl: data.tapLvl + 1 }); }
+        function buyTurbo() { if(isReady && data.coins >= 10000) { uRef.update({ coins: data.coins - 10000, turboEnd: Date.now() + 3600000 }); closeAll(); } }
         function renderSkins() {
             let h = ""; skins.forEach(s => {
                 const isO = data.ownedSkins.includes(s.id);
@@ -213,15 +198,15 @@
             });
             document.getElementById('skinGrid').innerHTML = h;
         }
-        function buyS(i, p) { if(dataLoaded && data.coins >= p) { let o = [...data.ownedSkins, i]; uRef.update({coins: data.coins - p, ownedSkins: o}); } }
-        function setS(i) { if(dataLoaded) uRef.update({activeSkin: i}); }
+        function buyS(i, p) { if(isReady && data.coins >= p) { let o = [...data.ownedSkins, i]; uRef.update({coins: data.coins - p, ownedSkins: o}); } }
+        function setS(i) { if(isReady) uRef.update({activeSkin: i}); }
         function sendAd() { const msg = document.getElementById('adMsg').value; if(msg) globalRef.update({ ad_text: msg }); }
         function clearAd() { globalRef.update({ ad_text: "" }); }
         function add100k() { uRef.update({ coins: data.coins + 100000 }); }
         function toggleS() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { closeAll(); document.getElementById('overlay').style.display='block'; document.getElementById(id).style.display='block'; if(document.getElementById('sidebar').classList.contains('active')) toggleS(); }
         function closeAll() { document.getElementById('overlay').style.display='none'; const m = document.getElementsByClassName('modal'); for(let x of m) x.style.display='none'; }
-        function saveWallet() { uRef.update({ wallet: document.getElementById('walletInput').value }); alert("Wallet saved!"); }
+        function saveWallet() { uRef.update({ wallet: document.getElementById('walletInput').value }); alert("Saved!"); }
         function invite() { tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/Dilik_gold_bot?start=${uId}&text=Join and Earn!`); }
         tg.expand();
     </script>
