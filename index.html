@@ -187,9 +187,32 @@
                 });
                 document.getElementById('leaderList').innerHTML = l;
             });
-        }
+        }function buyTurbo() {
+    if (!isReady) return;
 
-        function doUpgrade() { if(isReady && data.tapLvl < 5 && data.coins >= costs[data.tapLvl]) uRef.update({ coins: data.coins - costs[data.tapLvl], tapLvl: data.tapLvl + 1 }); }
+    const now = Date.now();
+    
+    // ТАФТИШ: Агар вақти Турбои ҳозира аз вақти ҳозира калон бошад, пас Турбо ҳанӯз фаъол аст
+    if (now < data.turboEnd) {
+        alert("Turbo is already active! Please wait until it finishes.");
+        return;
+    }
+
+    // Агар Турбо тамом шуда бошад ва танга кифоя бошад
+    if (data.coins >= 10000) {
+        data.coins -= 10000;
+        data.turboEnd = now + 3600000; // 1 соат илова мекунем
+        uRef.update({ 
+            coins: data.coins, 
+            turboEnd: data.turboEnd 
+        });
+        closeAll();
+        alert("Turbo Mode Activated for 1 hour!");
+    } else {
+        alert("Not enough coins! You need 10,000.");
+    }
+}
+
         function buyTurbo() { if(isReady && data.coins >= 10000) { uRef.update({ coins: data.coins - 10000, turboEnd: Date.now() + 3600000 }); closeAll(); } }
         function renderSkins() {
             let h = ""; skins.forEach(s => {
