@@ -10,7 +10,6 @@
     <style>
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; display: flex; flex-direction: column; height: 100vh; }
         
-        /* Header: Menu and League on the same line */
         .top-bar { display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; height: 40px; }
         .menu-icon { position: absolute; left: 20px; font-size: 28px; cursor: pointer; color: #ffd700; z-index: 100; }
         .league-header { font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
@@ -49,7 +48,7 @@
     <div class="sidebar" id="sidebar">
         <a onclick="showLeaderboard()">🏆 Top 10 Players</a>
         <a onclick="invite()">👥 Invite Friends</a>
-        <a onclick="showM('walletModal')">👛 My Wallet (TON)</a>
+        <a onclick="showM('walletModal')">👛 Wallet (TON)</a>
         <a href="https://t.me/DILIK_officia" target="_blank" onclick="claimBonus()">📢 Join Channel (+5k)</a>
         <a id="adminBtn" onclick="showAdminPanel()" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
         <a onclick="toggleSidebar()" style="color:#ff4444">❌ Close</a>
@@ -67,20 +66,20 @@
 
     <div id="walletModal" class="modal">
         <h2 style="color:#ffd700">WALLET CONNECT</h2>
-        <p style="font-size: 14px;">Адреси TON-и худро аз Telegram Wallet ё Tonkeeper нусхабардорӣ карда, дар ин ҷо илова кунед.</p>
-        <input type="text" id="walletAddressInput" placeholder="Адреси ҳамён (UQ...)">
-        <button class="btn-action" onclick="saveWalletAddress()">💾 ЗАХИРА КАРДАНИ АДРЕС</button>
+        <p style="font-size: 14px;">Copy your TON address from Telegram Wallet or Tonkeeper and paste it here.</p>
+        <input type="text" id="walletAddressInput" placeholder="Wallet Address (UQ...)">
+        <button class="btn-action" onclick="saveWalletAddress()">💾 SAVE ADDRESS</button>
         <hr style="border: 0.5px solid #333; margin: 20px 0;">
-        <button class="btn-action" style="background:#0088cc; color:white;" onclick="tg.openTelegramLink('https://t.me/wallet')">👛 КУШОДАНИ @WALLET</button>
-        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">ПАС</button>
+        <button class="btn-action" style="background:#0088cc; color:white;" onclick="tg.openTelegramLink('https://t.me/wallet')">👛 OPEN @WALLET</button>
+        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">BACK</button>
     </div>
 
     <div id="adminModal" class="modal">
         <h2 style="color:#00ff00">ADMIN PANEL</h2>
         <p id="totalUsersStat">Total Players: ...</p>
-        <textarea id="broadcastMsg" placeholder="Broadcast message..."></textarea>
-        <button class="btn-action" style="background:#0088cc; color:white;" onclick="sendBroadcast()">📢 SEND TO ALL</button>
-        <button class="btn-action" style="background:#ff4444; color:white;" onclick="clearBroadcast()">🗑 DELETE BROADCAST</button>
+        <textarea id="broadcastMsg" placeholder="Type message for all users..."></textarea>
+        <button class="btn-action" style="background:#0088cc; color:white;" onclick="sendBroadcast()">📢 SEND BROADCAST</button>
+        <button class="btn-action" style="background:#ff4444; color:white;" onclick="clearBroadcast()">🗑 DELETE MESSAGE</button>
         <button class="btn-action" onclick="addAdminCoins()">💰 +100,000 COINS</button>
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('adminModal')">CLOSE</button>
     </div>
@@ -133,9 +132,9 @@
 
         function saveWalletAddress() {
             const addr = document.getElementById('walletAddressInput').value;
-            if (addr.length < 10) return tg.showAlert("Адреси нодуруст!");
+            if (addr.length < 10) return tg.showAlert("Invalid address!");
             userRef.update({ walletAddress: addr, name: userName }).then(() => {
-                tg.showAlert("Адреси шумо бомуваффақият захира шуд! Акнун шумо ба листинг омодаед.");
+                tg.showAlert("Address saved successfully! You are ready for listing.");
             });
         }
 
@@ -160,7 +159,7 @@
 
         function clearBroadcast() {
             globalRef.update({ broadcast: null }).then(() => {
-                tg.showAlert("Deleted!");
+                tg.showAlert("Broadcast deleted!");
                 document.getElementById('broadcastMsg').value = "";
             });
         }
@@ -187,7 +186,7 @@
         }
 
         function upgradeBot() {
-            if (botLvl >= 9) { tg.showAlert("Level 10 is paid!"); return; }
+            if (botLvl >= 9) { tg.showAlert("Max Level Reached!"); return; }
             let cost = botCosts[botLvl];
             if (coins >= cost) { coins -= cost; botLvl++; userRef.update({coins: coins, botLvl: botLvl}); }
             else tg.showAlert("Not enough coins!");
