@@ -21,15 +21,15 @@
         #clicker { width: 210px; height: 210px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 90px; color: #663300; font-weight: bold; border: 8px solid #e6b800; cursor: pointer; box-shadow: 0 0 30px rgba(255,215,0,0.3); transition: transform 0.05s; user-select: none; }
         #clicker:active { transform: scale(0.96); }
         
-        /* Smaller & Lower Auto-Bot UI */
         .bot-container { margin-top: 60px; margin-left: auto; margin-right: auto; width: 75%; background: rgba(255, 215, 0, 0.08); padding: 10px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.4); }
         .bot-info { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #ffd700; }
         .bot-btn { background: #ffd700; color: #000; border: none; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 13px; }
         
-        .modal { display: none; position: fixed; top: 15%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 10%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 20px; border-radius: 20px; width: 90%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; max-height: 80vh; overflow-y: auto; }
         .btn-action { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
-        input { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; box-sizing: border-box; background: #eee; color: #000; }
+        input, textarea { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; box-sizing: border-box; background: #eee; color: #000; }
         
+        .leader-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,215,0,0.2); }
         .plus-one { position: absolute; color: #ffd700; font-size: 32px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s ease-out forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
@@ -37,11 +37,11 @@
 <body>
     <div class="menu-icon" onclick="toggleSidebar()">☰</div>
     <div class="sidebar" id="sidebar">
+        <a onclick="showLeaderboard()">🏆 Top 10 Players</a>
         <a onclick="invite()">👥 Invite Friends</a>
         <a onclick="showM('walletModal')">👛 Wallet & Transfer</a>
         <a href="https://t.me/DILIK_officia" target="_blank" onclick="claimBonus()">📢 Join Channel (+5k)</a>
-        <a onclick="showM('tariffModal')">📊 Tariffs</a>
-        <a id="adminBtn" onclick="showM('adminModal')" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
+        <a id="adminBtn" onclick="showAdminPanel()" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
         <a onclick="toggleSidebar()" style="color:#ff4444">❌ Close</a>
     </div>
 
@@ -50,17 +50,22 @@
     <div class="coin-wrapper" onclick="handleTap(event)"><div id="clicker">D</div></div>
     
     <div class="bot-container">
-        <div class="bot-info">
-            <span>🤖 AUTO-BOT</span>
-            <span id="botLevelDisplay">LVL: 0</span>
-        </div>
+        <div class="bot-info"><span>🤖 AUTO-BOT</span><span id="botLevelDisplay">LVL: 0</span></div>
         <button id="upgradeBotBtn" class="bot-btn" onclick="upgradeBot()">UPGRADE (500)</button>
+    </div>
+
+    <div id="leaderModal" class="modal">
+        <h2 style="color:#ffd700">🏆 TOP 10 PLAYERS</h2>
+        <div id="leaderList">Loading...</div>
+        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('leaderModal')">CLOSE</button>
     </div>
 
     <div id="adminModal" class="modal">
         <h2 style="color:#00ff00">ADMIN PANEL</h2>
-        <p>Welcome, Owner!</p>
-        <button class="btn-action" onclick="addAdminCoins()">+100,000 Coins</button>
+        <p id="totalUsersStat">Total Players: ...</p>
+        <textarea id="broadcastMsg" placeholder="Broadcast Message..."></textarea>
+        <button class="btn-action" style="background:#0088cc; color:white;" onclick="sendBroadcast()">📢 SEND TO ALL</button>
+        <button class="btn-action" onclick="addAdminCoins()">💰 +100,000 COINS</button>
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('adminModal')">CLOSE</button>
     </div>
 
@@ -72,12 +77,6 @@
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">BACK</button>
     </div>
 
-    <div id="tariffModal" class="modal">
-        <h2 style="color:#ffd700">TARIFFS</h2>
-        <p>BRONZE: 10k | SILVER: 50k | GOLD: 100k | PLATINUM: 200k</p>
-        <button class="btn-action" onclick="closeM('tariffModal')">OK</button>
-    </div>
-
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
@@ -86,75 +85,83 @@
         firebase.initializeApp(config);
         
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
+        const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "User";
         const userRef = firebase.database().ref('users/' + userId);
+        const globalRef = firebase.database().ref('global_config');
         
         let coins = 0;
         let botLvl = 0;
         let bonusClaimed = false;
-        // Updated prices: 1-500, 2-1500, 3-5000, 4-8000, 5-16000, 6-25000, 7-30000, 8-50000, 9-70000
         const botCosts = [500, 1500, 5000, 8000, 16000, 25000, 30000, 50000, 70000];
 
+        // Listen for Broadcasts
+        globalRef.child('broadcast').on('value', (s) => {
+            const msg = s.val();
+            if (msg) { tg.showPopup({ title: 'Announcement 📢', message: msg, buttons: [{type: 'ok'}] }); }
+        });
+
         userRef.on('value', (s) => {
-            const data = s.val();
-            coins = data?.coins || 0;
-            botLvl = data?.botLvl || 0;
-            bonusClaimed = data?.bonusClaimed || false;
+            const data = s.val() || {};
+            coins = data.coins || 0;
+            botLvl = data.botLvl || 0;
+            bonusClaimed = data.bonusClaimed || false;
+            userRef.update({ name: userName }); // Save name for leaderboard
 
             document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
             document.getElementById('botLevelDisplay').innerText = `LVL: ${botLvl}`;
             
-            let btn = document.getElementById('upgradeBotBtn');
-            if (botLvl >= 10) {
-                btn.innerText = "MAX LEVEL (PAID)";
-                btn.disabled = true;
-            } else if (botLvl === 9) {
-                btn.innerText = "BUY LVL 10 ($0.5)";
-            } else {
-                btn.innerText = `UPGRADE (${botCosts[botLvl].toLocaleString()})`;
-            }
-
             if (userId == ADMIN_ID) document.getElementById('adminBtn').style.display = 'block';
         });
 
-        setInterval(() => {
-            if (botLvl > 0) {
-                let gain = botLvl * 0.4; 
-                coins += gain;
-                userRef.update({coins: coins});
-            }
-        }, 1000);
+        setInterval(() => { if (botLvl > 0) { coins += botLvl * 0.4; userRef.update({coins: coins}); } }, 1000);
 
         function handleTap(e) {
             coins++;
             userRef.update({coins: coins});
             tg.HapticFeedback.impactOccurred('medium');
             const plus = document.createElement('div');
-            plus.innerText = '+1';
-            plus.className = 'plus-one';
-            plus.style.left = (e.clientX - 10) + 'px';
-            plus.style.top = (e.clientY - 40) + 'px';
+            plus.innerText = '+1'; plus.className = 'plus-one';
+            plus.style.left = (e.clientX - 10) + 'px'; plus.style.top = (e.clientY - 40) + 'px';
             document.body.appendChild(plus);
             setTimeout(() => plus.remove(), 700);
         }
 
-        function upgradeBot() {
-            if (botLvl === 9) {
-                tg.showAlert("Redirecting to Telegram Payment for LVL 10...");
-                return;
-            }
-            if (botLvl >= 10) return;
-
-            let cost = botCosts[botLvl];
-            if (coins >= cost) {
-                coins -= cost;
-                botLvl++;
-                userRef.update({coins: coins, botLvl: botLvl});
-                tg.showAlert(`Level ${botLvl} activated!`);
-            } else {
-                tg.showAlert("Not enough coins!");
-            }
+        function showLeaderboard() {
+            showM('leaderModal');
+            firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', (s) => {
+                let html = "";
+                let players = [];
+                s.forEach(child => { players.push(child.val()); });
+                players.reverse().forEach((p, i) => {
+                    html += `<div class="leader-item"><span>${i+1}. ${p.name || 'Unknown'}</span> <b>${Math.floor(p.coins).toLocaleString()}</b></div>`;
+                });
+                document.getElementById('leaderList').innerHTML = html;
+            });
         }
 
+        function showAdminPanel() {
+            firebase.database().ref('users').once('value', (s) => {
+                document.getElementById('totalUsersStat').innerText = `Total Players: ${s.numChildren()}`;
+            });
+            showM('adminModal');
+        }
+
+        function sendBroadcast() {
+            const msg = document.getElementById('broadcastMsg').value;
+            if (!msg) return;
+            globalRef.update({ broadcast: msg }).then(() => {
+                tg.showAlert("Sent!");
+                setTimeout(() => globalRef.update({ broadcast: null }), 5000);
+            });
+        }
+
+        function upgradeBot() {
+            if (botLvl >= 9) { tg.showAlert("Level 10 is paid!"); return; }
+            let cost = botCosts[botLvl];
+            if (coins >= cost) { coins -= cost; botLvl++; userRef.update({coins: coins, botLvl: botLvl}); }
+        }
+
+        function addAdminCoins() { coins += 100000; userRef.update({coins: coins}); }
         function transferCoins() {
             const tid = document.getElementById('targetId').value;
             const amt = parseInt(document.getElementById('amount').value);
@@ -164,26 +171,16 @@
                 firebase.database().ref('users/'+tid).once('value', s => {
                     let c = s.val()?.coins || 0;
                     firebase.database().ref('users/'+tid).update({coins: c + (amt-fee)});
+                    firebase.database().ref('users/'+ADMIN_ID).once('value', a => {
+                        let ac = a.val()?.coins || 0;
+                        firebase.database().ref('users/'+ADMIN_ID).update({coins: ac + fee});
+                    });
                 });
-                tg.showAlert("Gold sent successfully!");
+                tg.showAlert("Success!");
                 closeM('walletModal');
             }
         }
-
-        function claimBonus() {
-            if (!bonusClaimed) {
-                coins += 5000;
-                userRef.update({coins: coins, bonusClaimed: true});
-                tg.showAlert("5,000 coins bonus added!");
-            }
-        }
-
-        function addAdminCoins() {
-            coins += 100000;
-            userRef.update({coins: coins});
-            tg.showAlert("Admin: 100k added!");
-        }
-
+        function claimBonus() { if (!bonusClaimed) { coins += 5000; userRef.update({coins: coins, bonusClaimed: true}); tg.showAlert("Bonus claimed!"); } }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { document.getElementById(id).style.display='block'; toggleSidebar(); }
         function closeM(id) { document.getElementById(id).style.display='none'; }
