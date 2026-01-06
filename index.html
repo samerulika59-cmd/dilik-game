@@ -9,43 +9,35 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; display: flex; flex-direction: column; height: 100vh; }
-        
-        /* Top Bar & UI */
         .top-bar { display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; height: 40px; }
         .menu-icon { position: absolute; left: 20px; font-size: 28px; cursor: pointer; color: #ffd700; z-index: 100; }
         .league-header { font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
         #coinCount { font-size: 50px; color: #ffd700; font-weight: bold; margin-top: 5px; }
 
-        /* Sidebar */
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 999; padding-top: 60px; border-right: 2px solid #ffd700; text-align: left; overflow-y: auto; }
         .sidebar.active { left: 0; }
-        .sidebar a { padding: 15px 20px; text-decoration: none; font-size: 16px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; }
+        .sidebar a { padding: 15px 20px; text-decoration: none; font-size: 16px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         
-        /* Main Game Area */
         .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 30px; }
-        .coin-wrapper { position: relative; display: inline-block; margin-bottom: 30px; -webkit-tap-highlight-color: transparent; } 
-        
-        #clicker { width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; transition: transform 0.05s; user-select: none; margin: 0 auto; border: 8px solid rgba(255,215,0,0.5); background-size: cover; background-position: center; }
+        #clicker { width: 180px; height: 180px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 80px; color: #663300; font-weight: bold; border: 8px solid #e6b800; cursor: pointer; margin: 0 auto 30px auto; transition: transform 0.05s; user-select: none; }
         #clicker:active { transform: scale(0.92); }
         
         .bot-container { margin: 0 auto 10px auto; width: 85%; background: rgba(255, 215, 0, 0.08); padding: 12px; border-radius: 18px; border: 1px solid rgba(255, 215, 0, 0.3); }
-        .bot-btn { background: #ffd700; color: #000; border: none; padding: 10px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 14px; margin-top: 5px; }
+        .bot-btn { background: #ffd700; color: #000; border: none; padding: 10px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 14px; margin-top: 5px; cursor: pointer; }
 
-        /* Modals */
-        .modal { display: none; position: fixed; top: 5%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 20px; border-radius: 20px; width: 90%; z-index: 1001; border: 2px solid #ffd700; max-height: 85vh; overflow-y: auto; }
+        .modal { display: none; position: fixed; top: 5%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 20px; border-radius: 20px; width: 90%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; max-height: 85vh; overflow-y: auto; }
         .btn-action { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        
-        .skin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
-        .skin-img { width: 40px; height: 40px; border-radius: 50%; background-color: #ffd700; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         
         .plus-one { position: absolute; color: #ffd700; font-size: 30px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        
+        .skin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
     </style>
 </head>
 <body>
     <div class="top-bar">
         <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-        <div class="league-header" id="leagueName">BRONZE LEAGUE</div>
+        <div class="league-header" id="leagueName">PLATINUM LEAGUE</div>
     </div>
     <div id="coinCount">0</div>
 
@@ -56,40 +48,56 @@
         <a onclick="showM('tapUpgradeModal')">🚀 Upgrade Tap</a>
         <a onclick="invite()">👥 Invite Friends</a>
         <a onclick="showM('walletModal')">👛 Wallet (TON)</a>
-        <a id="adminBtn" onclick="showAdminPanel()" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
+        <a id="adminBtn" onclick="showM('adminModal')" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
         <a onclick="toggleSidebar()" style="color:#ff4444">❌ Close</a>
     </div>
 
     <div class="content-area">
         <div id="turboTimer" style="color:#ff4444; font-weight:bold; margin-bottom:10px; display:none;">TURBO ACTIVE: <span id="timeSec">60:00</span></div>
-        <div class="coin-wrapper" onclick="handleTap(event)">
-            <div id="clicker">💰</div>
-        </div>
+        <div onclick="handleTap(event)"><div id="clicker">D</div></div>
         <div class="bot-container">
-            <div style="font-size:12px; color:#ffd700;">🤖 AUTO-BOT LVL: <span id="botLevelDisplay">0</span></div>
-            <button id="upgradeBotBtn" class="bot-btn" onclick="upgradeBot()">UPGRADE</button>
+            <div style="display:flex; justify-content:space-between; font-size:12px;"><span>🤖 AUTO-BOT</span><span>LVL: <span id="botLvlText">0</span></span></div>
+            <button id="upBotBtn" class="bot-btn" onclick="upgradeBot()">UPGRADE (70,000)</button>
         </div>
     </div>
 
     <div id="turboModal" class="modal">
         <h2 style="color:#ff4444">TURBO MODE</h2>
-        <p>Pay 10,000 coins to get <b>+5 coins per tap</b> for 1 hour!</p>
-        <button class="btn-action" onclick="activateTurbo()">🔥 ACTIVATE (10,000)</button>
+        <p>Pay 10,000 coins to get +5 per tap for 1 hour!</p>
+        <button class="btn-action" onclick="activateTurbo()">ACTIVATE (10,000)</button>
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('turboModal')">CLOSE</button>
     </div>
 
     <div id="skinModal" class="modal">
         <h2 style="color:#00ff00">SKIN SHOP</h2>
-        <div id="skinList">
-            </div>
+        <div id="skinList"></div>
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('skinModal')">CLOSE</button>
     </div>
 
+    <div id="tapUpgradeModal" class="modal">
+        <h2>UPGRADE TAP</h2>
+        <p>Current Multiplier: <span id="tapMult">1</span></p>
+        <button id="upTapBtn" class="btn-action" onclick="upgradeTap()">UPGRADE</button>
+        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('tapUpgradeModal')">CLOSE</button>
+    </div>
+
+    <div id="leaderModal" class="modal">
+        <h2>TOP 10 PLAYERS</h2>
+        <div id="leaderList" style="text-align:left;"></div>
+        <button class="btn-action" onclick="closeM('leaderModal')">CLOSE</button>
+    </div>
+
+    <div id="adminModal" class="modal">
+        <h2>ADMIN PANEL</h2>
+        <button class="btn-action" onclick="addAdminCoins()">+100K COINS</button>
+        <button class="btn-action" onclick="closeM('adminModal')">CLOSE</button>
+    </div>
+
     <div id="walletModal" class="modal">
-        <h2 style="color:#ffd700">WALLET</h2>
-        <input type="text" id="walletAddressInput" placeholder="TON Address" style="width:90%; padding:10px; margin-top:10px;">
-        <button class="btn-action" onclick="saveWalletAddress()">SAVE</button>
-        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">CLOSE</button>
+        <h2>WALLET</h2>
+        <input type="text" id="wInput" placeholder="Address" style="width:90%; padding:10px; margin:10px 0;">
+        <button class="btn-action" onclick="saveW()">SAVE</button>
+        <button class="btn-action" onclick="closeM('walletModal')">CLOSE</button>
     </div>
 
     <script>
@@ -97,111 +105,85 @@
         const ADMIN_ID = 5863448768;
         const config = { databaseURL: "https://dilik-game-default-rtdb.firebaseio.com" };
         firebase.initializeApp(config);
-        
-        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
         const userRef = firebase.database().ref('users/' + userId);
-        
-        let coins = 0, botLvl = 0, tapLvl = 0, turboEnd = 0, activeSkin = "💰";
-        const skins = [
-            {icon: "💰", name: "Default Gold", price: 0},
-            {icon: "💎", name: "Diamond", price: 50000},
-            {icon: "🔮", name: "Magic Orb", price: 75000},
-            {icon: "🪙", name: "Silver Coin", price: 10000},
-            {icon: "🔥", name: "Fire Token", price: 30000},
-            {icon: "🍀", name: "Lucky Leaf", price: 20000},
-            {icon: "🌟", name: "Star Coin", price: 40000},
-            {icon: "🍎", name: "Apple Coin", price: 15000},
-            {icon: "⚡", name: "Energy Coin", price: 60000},
-            {icon: "₿", name: "Bitcoin", price: 100000}
-        ];
+
+        let coins = 0, tapLvl = 0, botLvl = 0, turboEnd = 0, activeSkin = "D";
+        const tapCosts = [3000, 8000, 15000, 25000, 45000];
+        const botCosts = [500, 1500, 5000, 8000, 16000, 25000, 30000, 50000, 70000];
+        const skins = [ {i:"D", p:0}, {i:"💎", p:50000}, {i:"₿", p:100000}, {i:"🌟", p:20000} ];
 
         userRef.on('value', (s) => {
-            const data = s.val() || {};
-            coins = data.coins || 0;
-            botLvl = data.botLvl || 0;
-            tapLvl = data.tapLvl || 0;
-            turboEnd = data.turboEnd || 0;
-            activeSkin = data.activeSkin || "💰";
+            const d = s.val() || {};
+            coins = d.coins || 0; tapLvl = d.tapLvl || 0; botLvl = d.botLvl || 0;
+            turboEnd = d.turboEnd || 0; activeSkin = d.activeSkin || "D";
             
             document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-            document.getElementById('botLevelDisplay').innerText = botLvl;
+            document.getElementById('botLvlText').innerText = botLvl;
             document.getElementById('clicker').innerText = activeSkin;
+            document.getElementById('tapMult').innerText = tapLvl + 1;
             
-            if (userId == ADMIN_ID) document.getElementById('adminBtn').style.display = 'block';
-            loadSkins(data.ownedSkins || ["💰"]);
+            if(botLvl < 9) document.getElementById('upBotBtn').innerText = `UPGRADE (${botCosts[botLvl].toLocaleString()})`;
+            else document.getElementById('upBotBtn').innerText = "MAX LEVEL";
+
+            if(tapLvl < 5) document.getElementById('upTapBtn').innerText = `UPGRADE (${tapCosts[tapLvl].toLocaleString()})`;
+            else document.getElementById('upTapBtn').innerText = "MAX LEVEL";
+
+            if(userId == ADMIN_ID) document.getElementById('adminBtn').style.display = 'flex';
+            renderSkins(d.ownedSkins || ["D"]);
         });
 
-        function loadSkins(owned) {
-            let html = "";
-            skins.forEach(s => {
-                const isOwned = owned.includes(s.icon);
-                html += `<div class="skin-item">
-                    <div class="skin-img">${s.icon}</div>
-                    <div style="flex-grow:1; text-align:left; margin-left:15px;">
-                        <b>${s.name}</b><br><small>${isOwned ? 'Owned' : s.price.toLocaleString() + ' coins'}</small>
-                    </div>
-                    <button class="btn-action" style="width:80px; margin:0;" onclick="${isOwned ? `selectSkin('${s.icon}')` : `buySkin('${s.icon}', ${s.price})`}">${isOwned ? 'Use' : 'Buy'}</button>
-                </div>`;
-            });
-            document.getElementById('skinList').innerHTML = html;
-        }
-
-        function buySkin(icon, price) {
-            if (coins >= price) {
-                userRef.once('value', s => {
-                    let owned = s.val().ownedSkins || ["💰"];
-                    owned.push(icon);
-                    userRef.update({ coins: coins - price, ownedSkins: owned });
-                    tg.showAlert("Skin purchased!");
-                });
-            } else tg.showAlert("Not enough coins!");
-        }
-
-        function selectSkin(icon) {
-            userRef.update({ activeSkin: icon });
-            tg.showAlert("Skin applied!");
+        function handleTap(e) {
+            let p = (1 + tapLvl) + (Date.now() < turboEnd ? 5 : 0);
+            coins += p; userRef.update({coins: coins, name: tg.initDataUnsafe.user?.first_name || "User"});
+            tg.HapticFeedback.impactOccurred('medium');
+            const el = document.createElement('div'); el.innerText = '+' + p; el.className = 'plus-one';
+            el.style.left = e.clientX + 'px'; el.style.top = e.clientY + 'px';
+            document.body.appendChild(el); setTimeout(() => el.remove(), 700);
         }
 
         function activateTurbo() {
-            if (coins >= 10000) {
-                const endTime = Date.now() + (60 * 60 * 1000);
-                userRef.update({ coins: coins - 10000, turboEnd: endTime });
-                tg.showAlert("Turbo Activated! +5 per tap for 1 hour.");
-                closeM('turboModal');
-            } else tg.showAlert("Not enough coins!");
+            if(coins >= 10000) { userRef.update({coins: coins - 10000, turboEnd: Date.now() + 3600000}); closeM('turboModal'); }
+            else tg.showAlert("Not enough coins!");
         }
 
-        function handleTap(e) {
-            const isTurbo = Date.now() < turboEnd;
-            let gain = (1 + tapLvl) + (isTurbo ? 5 : 0);
-            coins += gain;
-            userRef.update({coins: coins});
-            
-            tg.HapticFeedback.impactOccurred('medium');
-            const plus = document.createElement('div');
-            plus.innerText = '+' + gain; plus.className = 'plus-one';
-            plus.style.left = e.clientX + 'px'; plus.style.top = e.clientY + 'px';
-            document.body.appendChild(plus);
-            setTimeout(() => plus.remove(), 700);
+        function renderSkins(owned) {
+            let h = "";
+            skins.forEach(s => {
+                let isO = owned.includes(s.i);
+                h += `<div class="skin-item"><span>${s.i}</span><button class="btn-action" style="width:80px;" onclick="${isO ? `setS('${s.i}')` : `buyS('${s.i}',${s.p})`}">${isO ? 'Use' : s.p}</button></div>`;
+            });
+            document.getElementById('skinList').innerHTML = h;
         }
 
+        function buyS(i, p) { if(coins>=p) { userRef.once('value', s => { let o = s.val().ownedSkins || ["D"]; o.push(i); userRef.update({coins:coins-p, ownedSkins:o}); }); } }
+        function setS(i) { userRef.update({activeSkin: i}); }
+        function upgradeTap() { if(tapLvl < 5 && coins >= tapCosts[tapLvl]) userRef.update({coins: coins - tapCosts[tapLvl], tapLvl: tapLvl + 1}); }
+        function upgradeBot() { if(botLvl < 9 && coins >= botCosts[botLvl]) userRef.update({coins: coins - botCosts[botLvl], botLvl: botLvl + 1}); }
+        
+        setInterval(() => { if(botLvl > 0) userRef.update({coins: coins + (botLvl * 0.5)}); }, 2000);
         setInterval(() => {
-            const now = Date.now();
-            if (now < turboEnd) {
+            if(Date.now() < turboEnd) { 
                 document.getElementById('turboTimer').style.display = 'block';
-                let diff = Math.floor((turboEnd - now) / 1000);
-                let m = Math.floor(diff / 60);
-                let s = diff % 60;
-                document.getElementById('timeSec').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-            } else {
-                document.getElementById('turboTimer').style.display = 'none';
-            }
+                let rem = Math.floor((turboEnd - Date.now())/1000);
+                document.getElementById('timeSec').innerText = Math.floor(rem/60) + ":" + (rem%60).toString().padStart(2,'0');
+            } else document.getElementById('turboTimer').style.display = 'none';
         }, 1000);
 
-        // Sidebar and UI helpers
+        function showLeaderboard() {
+            showM('leaderModal');
+            firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', s => {
+                let h = ""; s.forEach(c => { h = `<div>${c.val().name}: ${Math.floor(c.val().coins).toLocaleString()}</div>` + h; });
+                document.getElementById('leaderList').innerHTML = h;
+            });
+        }
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { document.getElementById(id).style.display='block'; toggleSidebar(); }
         function closeM(id) { document.getElementById(id).style.display='none'; }
+        function addAdminCoins() { userRef.update({coins: coins + 100000}); }
+        function saveW() { userRef.update({wallet: document.getElementById('wInput').value}); tg.showAlert("Saved!"); }
+        function invite() { tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/Dilik_gold_bot?start=${userId}&text=Join!`); }
     </script>
 </body>
 </html>
