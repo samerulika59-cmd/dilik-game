@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dilik Gold Ultimate</title>
-    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; outline: none; }
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         .click-area { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; }
-        #clicker { width: 220px; height: 220px; background: radial-gradient(circle, #ffcc33 0%, #cc9900 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 90px; color: #663300; font-weight: bold; border: 10px solid #e6b800; box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); cursor: pointer; transition: transform 0.05s ease-in-out; position: relative; z-index: 5; }
-        #clicker:active { transform: scale(0.92); }
+        /* Style for loading state */
+        #clicker { width: 220px; height: 220px; background: radial-gradient(circle, #ffcc33 0%, #cc9900 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 90px; color: #663300; font-weight: bold; border: 10px solid #e6b800; box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); cursor: pointer; transition: 0.2s; position: relative; z-index: 5; opacity: 0.3; }
+        #clicker.ready { opacity: 1; transform: scale(1); }
+        #clicker:active.ready { transform: scale(0.92); }
         .tap-number { position: absolute; color: #ffd700; font-size: 35px; font-weight: 900; pointer-events: none; animation: moveUp 0.8s ease-out forwards; z-index: 10; }
         @keyframes moveUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #00152e; transition: 0.3s; z-index: 1000; border-right: 2px solid #ffd700; padding-top: 50px; }
@@ -49,7 +49,7 @@
             <span></span>
         </div>
         <div id="ad-banner"></div>
-        <div id="balance" style="font-size: 55px; color: #ffd700; font-weight: bold;">0</div>
+        <div id="balance" style="font-size: 45px; color: #ffd700; font-weight: bold;">Syncing...</div>
     </div>
 
     <div class="click-area">
@@ -109,6 +109,8 @@
         const globalRef = firebase.database().ref('global_config');
 
         let data = { coins: 0, tapLvl: 0, turboEnd: 0, activeSkin: "D", ownedSkins: ["D"], wallet: "", lastLeaderboardPayDate: "", joinedChannel: false };
+        let dataLoaded = false; // Flag to prevent coin loss
+
         const costs = [3000, 8000, 15000, 25000, 45000];
         const skins = [
             {id: "D", p: 0}, {id: "₿", p: 50000}, {id: "💎", p: 100000}, {id: "🥇", p: 25000},
@@ -116,7 +118,18 @@
             {id: "💰", p: 15000}, {id: "👑", p: 90000}, {id: "🍎", p: 30000}, {id: "⚡", p: 55000}
         ];
 
-        uRef.on('value', s => { if(s.val()) { data = {...data, ...s.val()}; updateUI(); } else uRef.set(data); });
+        // Fetch user data with loading check
+        uRef.on('value', s => { 
+            if(s.val()) { 
+                data = {...data, ...s.val()}; 
+            } else {
+                uRef.set(data);
+            }
+            dataLoaded = true; // Data is ready!
+            document.getElementById('clicker').classList.add('ready');
+            updateUI(); 
+        });
+
         globalRef.on('value', s => {
             const g = s.val();
             const banner = document.getElementById('ad-banner');
@@ -125,6 +138,7 @@
         });
 
         function updateUI() {
+            if(!dataLoaded) return;
             document.getElementById('balance').innerText = Math.floor(data.coins).toLocaleString();
             document.getElementById('clicker').innerText = data.activeSkin;
             document.getElementById('lvlNow').innerText = data.tapLvl + 1;
@@ -135,9 +149,12 @@
         }
 
         function handleTap(e) {
+            if(!dataLoaded) return; // DO NOTHING IF DATA NOT LOADED
+            
             const gain = (1 + data.tapLvl) + (Date.now() < data.turboEnd ? 5 : 0);
             data.coins += gain;
             uRef.update({ coins: data.coins, name: tg.initDataUnsafe.user?.first_name || "User" });
+            
             const n = document.createElement('div'); n.className = 'tap-number'; n.innerText = `+${gain}`;
             n.style.left = `${e.clientX - 20}px`; n.style.top = `${e.clientY - 40}px`;
             document.body.appendChild(n); setTimeout(() => n.remove(), 800);
@@ -146,7 +163,7 @@
 
         function joinChannel() {
             tg.openTelegramLink("https://t.me/DILIK_officia");
-            if(!data.joinedChannel) {
+            if(!data.joinedChannel && dataLoaded) {
                 data.coins += 5000;
                 data.joinedChannel = true;
                 uRef.update({ coins: data.coins, joinedChannel: true });
@@ -155,6 +172,7 @@
         }
 
         function showLeaderboard() {
+            if(!dataLoaded) return;
             const now = new Date();
             const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
             if (data.lastLeaderboardPayDate === todayStr) { loadAndShowLeaderboard(); } 
@@ -186,8 +204,8 @@
             });
         }
 
-        function doUpgrade() { if(data.tapLvl < 5 && data.coins >= costs[data.tapLvl]) uRef.update({ coins: data.coins - costs[data.tapLvl], tapLvl: data.tapLvl + 1 }); }
-        function buyTurbo() { if(data.coins >= 10000) { uRef.update({ coins: data.coins - 10000, turboEnd: Date.now() + 3600000 }); closeAll(); } }
+        function doUpgrade() { if(dataLoaded && data.tapLvl < 5 && data.coins >= costs[data.tapLvl]) uRef.update({ coins: data.coins - costs[data.tapLvl], tapLvl: data.tapLvl + 1 }); }
+        function buyTurbo() { if(dataLoaded && data.coins >= 10000) { uRef.update({ coins: data.coins - 10000, turboEnd: Date.now() + 3600000 }); closeAll(); } }
         function renderSkins() {
             let h = ""; skins.forEach(s => {
                 const isO = data.ownedSkins.includes(s.id);
@@ -195,8 +213,8 @@
             });
             document.getElementById('skinGrid').innerHTML = h;
         }
-        function buyS(i, p) { if(data.coins >= p) { let o = [...data.ownedSkins, i]; uRef.update({coins: data.coins - p, ownedSkins: o}); } }
-        function setS(i) { uRef.update({activeSkin: i}); }
+        function buyS(i, p) { if(dataLoaded && data.coins >= p) { let o = [...data.ownedSkins, i]; uRef.update({coins: data.coins - p, ownedSkins: o}); } }
+        function setS(i) { if(dataLoaded) uRef.update({activeSkin: i}); }
         function sendAd() { const msg = document.getElementById('adMsg').value; if(msg) globalRef.update({ ad_text: msg }); }
         function clearAd() { globalRef.update({ ad_text: "" }); }
         function add100k() { uRef.update({ coins: data.coins + 100000 }); }
