@@ -25,6 +25,7 @@
         @keyframes moveUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
         #ad-banner { display: none; background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; padding: 10px; margin: 10px; border-radius: 10px; color: #ffd700; font-weight: bold; }
         .skin-box { background: #002b5c; padding: 10px; border-radius: 15px; border: 1px solid #ffd700; }
+        #turboTimerDisplay { color: #ff4444; font-size: 18px; font-weight: bold; margin-top: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -49,6 +50,7 @@
         </div>
         <div id="ad-banner"></div>
         <div id="balance" style="font-size: 45px; color: #ffd700; font-weight: bold; margin-top: 10px;">WAIT...</div>
+        <div id="turboTimerDisplay">TURBO: 59:59</div>
     </div>
 
     <div class="click-area">
@@ -63,7 +65,6 @@
     <div id="turboModal" class="modal">
         <h2>🔥 TURBO MODE</h2>
         <p>Cost: 10,000 | Effect: +5 per tap | Duration: 1 hour</p>
-        <div id="turboTimerInfo" style="color: #ff4444; font-weight: bold; margin-bottom: 10px;"></div>
         <button id="buyTurboBtn" class="btn-gold" onclick="buyTurbo()">ACTIVATE</button>
         <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">CLOSE</button>
     </div>
@@ -96,10 +97,6 @@
             updateUI();
         });
 
-        globalRef.on('value', s => {
-            const g = s.val(); if(g && g.ad_text) { document.getElementById('ad-banner').innerText = "📢 " + g.ad_text; document.getElementById('ad-banner').style.display = 'block'; }
-        });
-
         function updateUI() {
             if(!isReady) return;
             document.getElementById('balance').innerText = Math.floor(data.coins).toLocaleString();
@@ -114,20 +111,27 @@
 
         function checkTurboStatus() {
             const now = Date.now();
+            const timerDisplay = document.getElementById('turboTimerDisplay');
             const menuBtn = document.getElementById('turboBtnMenu');
             const modalBtn = document.getElementById('buyTurboBtn');
-            const timerInfo = document.getElementById('turboTimerInfo');
+
             if (now < data.turboEnd) {
-                let timeLeft = Math.round((data.turboEnd - now) / 60000);
-                menuBtn.innerText = `🔥 Turbo Active (${timeLeft}m)`;
+                let diff = data.turboEnd - now;
+                let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                let seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                // Намоиш дар зери тангаҳо
+                timerDisplay.innerText = `TURBO ACTIVE: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                timerDisplay.style.display = 'block';
+                
+                menuBtn.innerText = `🔥 Turbo Active (${minutes}m)`;
                 modalBtn.innerText = "ALREADY ACTIVE";
                 modalBtn.disabled = true;
-                timerInfo.innerText = `Active! Remaining: ${timeLeft} min`;
             } else {
+                timerDisplay.style.display = 'none';
                 menuBtn.innerText = "🔥 Turbo Mode (10k)";
                 modalBtn.innerText = "ACTIVATE";
                 modalBtn.disabled = false;
-                timerInfo.innerText = "";
             }
         }
 
@@ -153,35 +157,16 @@
             tg.HapticFeedback.impactOccurred('light');
         }
 
+        // Функсияҳои дигар (Топ 10, Скин ва ғ.) бетағйир монданд
         function showLeaderboard() {
             const now = new Date(); const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
             if (data.lastLeaderboardPayDate === todayStr) loadAndShowLeaderboard();
             else if (confirm("View Top 10 costs 8,000 coins. Proceed?")) {
                 if (data.coins >= 8000) { data.coins -= 8000; data.lastLeaderboardPayDate = todayStr; uRef.update({ coins: data.coins, lastLeaderboardPayDate: todayStr }); loadAndShowLeaderboard(); }
-                else alert("Not enough coins!");
             }
         }
-
-        function loadAndShowLeaderboard() {
-            showM('leaderboardModal');
-            firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', s => {
-                let l = ""; let players = []; s.forEach(c => { players.push(c.val()); });
-                players.reverse().forEach((p, i) => {
-                    let r = i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
-                    l += `<div style="padding:8px; border-bottom:1px solid #333">${i+1}. ${p.name || 'User'}: ${Math.floor(p.coins).toLocaleString()} ${r}</div>`;
-                });
-                document.getElementById('leaderList').innerHTML = l;
-            });
-        }
-
-        function joinChannel() { 
-            tg.openTelegramLink("https://t.me/DILIK_officia"); 
-            if(!data.joinedChannel && isReady) { 
-                data.coins += 5000; data.joinedChannel = true; 
-                uRef.update({ coins: data.coins, joinedChannel: true }); 
-                alert("Bonus 5,000 coins added!");
-            } 
-        }
+        function loadAndShowLeaderboard() { showM('leaderboardModal'); firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', s => { let l = ""; let players = []; s.forEach(c => { players.push(c.val()); }); players.reverse().forEach((p, i) => { let r = i===0?"🥇":i===1?"🥈":i===2?"🥉":""; l += `<div style="padding:8px; border-bottom:1px solid #333">${i+1}. ${p.name || 'User'}: ${Math.floor(p.coins).toLocaleString()} ${r}</div>`; }); document.getElementById('leaderList').innerHTML = l; }); }
+        function joinChannel() { tg.openTelegramLink("https://t.me/DILIK_officia"); if(!data.joinedChannel) { data.coins += 5000; data.joinedChannel = true; uRef.update({ coins: data.coins, joinedChannel: true }); } }
         function renderSkins() { let h = ""; skins.forEach(s => { const isO = data.ownedSkins.includes(s.id); h += `<div class="skin-box"><div style="font-size:30px">${s.id}</div><button class="btn-gold" style="padding:5px;font-size:10px" onclick="${isO ? `setS('${s.id}')` : `buyS('${s.id}',${s.p})`}">${isO ? (data.activeSkin==s.id?'ACTIVE':'USE') : s.p}</button></div>`; }); document.getElementById('skinGrid').innerHTML = h; }
         function buyS(i, p) { if(data.coins >= p) { let o = [...data.ownedSkins, i]; uRef.update({coins: data.coins - p, ownedSkins: o}); } }
         function setS(i) { uRef.update({activeSkin: i}); }
@@ -193,7 +178,9 @@
         function saveWallet() { uRef.update({ wallet: document.getElementById('walletInput').value }); alert("Saved!"); }
         function invite() { tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/Dilik_gold_bot?start=${uId}&text=Join and Earn!`); }
         tg.expand();
-        setInterval(checkTurboStatus, 30000); 
+        
+        // Таймерро ҳар сония нав мекунем
+        setInterval(checkTurboStatus, 1000); 
     </script>
 </body>
 </html>
