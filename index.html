@@ -15,14 +15,12 @@
         .menu-icon { position: absolute; left: 20px; font-size: 28px; cursor: pointer; color: #ffd700; z-index: 100; }
         .league-header { font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Coins right under the league name */
         #coinCount { font-size: 55px; color: #ffd700; font-weight: bold; margin-top: 5px; }
 
         .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 999; padding-top: 80px; border-right: 2px solid #ffd700; text-align: left; }
         .sidebar.active { left: 0; }
         .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; }
         
-        /* Main area pushing elements to bottom */
         .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 60px; }
         
         .coin-wrapper { position: relative; display: inline-block; margin-bottom: 50px; -webkit-tap-highlight-color: transparent; } 
@@ -35,7 +33,7 @@
         
         .modal { display: none; position: fixed; top: 10%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 25px; border-radius: 20px; width: 90%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; max-height: 80vh; overflow-y: auto; }
         .btn-action { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
-        textarea { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #eee; color: #000; min-height: 80px; }
+        input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #eee; color: #000; margin-top: 10px; }
         
         .plus-one { position: absolute; color: #ffd700; font-size: 32px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s ease-out forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
@@ -51,7 +49,7 @@
     <div class="sidebar" id="sidebar">
         <a onclick="showLeaderboard()">🏆 Top 10 Players</a>
         <a onclick="invite()">👥 Invite Friends</a>
-        <a onclick="openTgWallet()">👛 Telegram @Wallet</a>
+        <a onclick="showM('walletModal')">👛 My Wallet (TON)</a>
         <a href="https://t.me/DILIK_officia" target="_blank" onclick="claimBonus()">📢 Join Channel (+5k)</a>
         <a id="adminBtn" onclick="showAdminPanel()" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
         <a onclick="toggleSidebar()" style="color:#ff4444">❌ Close</a>
@@ -61,11 +59,20 @@
         <div class="coin-wrapper" onclick="handleTap(event)">
             <div id="clicker">D</div>
         </div>
-        
         <div class="bot-container">
             <div class="bot-info"><span>🤖 AUTO-BOT</span><span id="botLevelDisplay">LVL: 0</span></div>
             <button id="upgradeBotBtn" class="bot-btn" onclick="upgradeBot()">UPGRADE (500)</button>
         </div>
+    </div>
+
+    <div id="walletModal" class="modal">
+        <h2 style="color:#ffd700">WALLET CONNECT</h2>
+        <p style="font-size: 14px;">Адреси TON-и худро аз Telegram Wallet ё Tonkeeper нусхабардорӣ карда, дар ин ҷо илова кунед.</p>
+        <input type="text" id="walletAddressInput" placeholder="Адреси ҳамён (UQ...)">
+        <button class="btn-action" onclick="saveWalletAddress()">💾 ЗАХИРА КАРДАНИ АДРЕС</button>
+        <hr style="border: 0.5px solid #333; margin: 20px 0;">
+        <button class="btn-action" style="background:#0088cc; color:white;" onclick="tg.openTelegramLink('https://t.me/wallet')">👛 КУШОДАНИ @WALLET</button>
+        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">ПАС</button>
     </div>
 
     <div id="adminModal" class="modal">
@@ -100,16 +107,13 @@
         let botLvl = 0;
         const botCosts = [500, 1500, 5000, 8000, 16000, 25000, 30000, 50000, 70000];
 
-        globalRef.child('broadcast').on('value', (s) => {
-            const msg = s.val();
-            if (msg) tg.showPopup({ title: 'Announcement 📢', message: msg, buttons: [{type: 'ok'}] });
-        });
-
         userRef.on('value', (s) => {
             const data = s.val() || {};
             coins = data.coins || 0;
             botLvl = data.botLvl || 0;
-            userRef.update({ name: userName, coins: coins });
+            if(data.walletAddress) {
+                document.getElementById('walletAddressInput').value = data.walletAddress;
+            }
 
             document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
             document.getElementById('botLevelDisplay').innerText = `LVL: ${botLvl}`;
@@ -127,22 +131,25 @@
             if (userId == ADMIN_ID) document.getElementById('adminBtn').style.display = 'block';
         });
 
+        function saveWalletAddress() {
+            const addr = document.getElementById('walletAddressInput').value;
+            if (addr.length < 10) return tg.showAlert("Адреси нодуруст!");
+            userRef.update({ walletAddress: addr, name: userName }).then(() => {
+                tg.showAlert("Адреси шумо бомуваффақият захира шуд! Акнун шумо ба листинг омодаед.");
+            });
+        }
+
         setInterval(() => { if (botLvl > 0) { coins += botLvl * 0.4; userRef.update({coins: coins}); } }, 1000);
 
         function handleTap(e) {
             coins++;
-            userRef.update({coins: coins});
+            userRef.update({coins: coins, name: userName});
             tg.HapticFeedback.impactOccurred('medium');
             const plus = document.createElement('div');
             plus.innerText = '+1'; plus.className = 'plus-one';
             plus.style.left = (e.clientX - 10) + 'px'; plus.style.top = (e.clientY - 40) + 'px';
             document.body.appendChild(plus);
             setTimeout(() => plus.remove(), 700);
-        }
-
-        function openTgWallet() {
-            // Opens the official Telegram @wallet
-            tg.openTelegramLink("https://t.me/wallet");
         }
 
         function sendBroadcast() {
