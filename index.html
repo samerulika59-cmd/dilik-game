@@ -9,48 +9,55 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; display: flex; flex-direction: column; height: 100vh; }
-        .menu-icon { position: absolute; top: 25px; left: 20px; font-size: 30px; cursor: pointer; z-index: 100; color: #ffd700; }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 99; padding-top: 80px; border-right: 2px solid #ffd700; text-align: left; }
+        
+        /* Header: Menu and League on the same line */
+        .top-bar { display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; height: 40px; }
+        .menu-icon { position: absolute; left: 20px; font-size: 28px; cursor: pointer; color: #ffd700; z-index: 100; }
+        .league-header { font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Coins right under the league name */
+        #coinCount { font-size: 55px; color: #ffd700; font-weight: bold; margin-top: 5px; }
+
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 999; padding-top: 80px; border-right: 2px solid #ffd700; text-align: left; }
         .sidebar.active { left: 0; }
         .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; }
         
-        /* Layout Adjustments - Moving elements down */
-        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 50px; }
+        /* Main area pushing elements to bottom */
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 60px; }
         
-        .league-header { font-size: 22px; font-weight: 900; color: #ffffff; text-transform: uppercase; margin-bottom: 5px; }
-        #coinCount { font-size: 55px; color: #ffd700; margin-bottom: 20px; font-weight: bold; }
-        
-        .coin-wrapper { position: relative; display: inline-block; margin-bottom: 40px; -webkit-tap-highlight-color: transparent; } 
+        .coin-wrapper { position: relative; display: inline-block; margin-bottom: 50px; -webkit-tap-highlight-color: transparent; } 
         #clicker { width: 200px; height: 200px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 85px; color: #663300; font-weight: bold; border: 8px solid #e6b800; cursor: pointer; box-shadow: 0 0 25px rgba(255,215,0,0.3); transition: transform 0.05s; user-select: none; margin: 0 auto; }
         #clicker:active { transform: scale(0.95); }
         
-        .bot-container { margin: 0 auto 20px auto; width: 80%; background: rgba(255, 215, 0, 0.08); padding: 12px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3); }
-        .bot-info { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #ffd700; }
-        .bot-btn { background: #ffd700; color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 13px; }
+        .bot-container { margin: 0 auto 10px auto; width: 85%; background: rgba(255, 215, 0, 0.08); padding: 12px; border-radius: 18px; border: 1px solid rgba(255, 215, 0, 0.3); }
+        .bot-info { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #ffd700; }
+        .bot-btn { background: #ffd700; color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; }
         
-        .modal { display: none; position: fixed; top: 10%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 25px; border-radius: 20px; width: 85%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; max-height: 80vh; overflow-y: auto; }
+        .modal { display: none; position: fixed; top: 10%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 25px; border-radius: 20px; width: 90%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; max-height: 80vh; overflow-y: auto; }
         .btn-action { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
-        textarea { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; box-sizing: border-box; background: #eee; color: #000; min-height: 80px; }
+        textarea { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #eee; color: #000; min-height: 80px; }
         
         .plus-one { position: absolute; color: #ffd700; font-size: 32px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s ease-out forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
-    <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    <div class="top-bar">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="league-header" id="leagueName">BRONZE LEAGUE</div>
+    </div>
+    <div id="coinCount">0</div>
+
     <div class="sidebar" id="sidebar">
         <a onclick="showLeaderboard()">🏆 Top 10 Players</a>
         <a onclick="invite()">👥 Invite Friends</a>
-        <a onclick="showM('walletModal')">👛 Telegram Wallet</a>
+        <a onclick="openTgWallet()">👛 Telegram @Wallet</a>
         <a href="https://t.me/DILIK_officia" target="_blank" onclick="claimBonus()">📢 Join Channel (+5k)</a>
         <a id="adminBtn" onclick="showAdminPanel()" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
         <a onclick="toggleSidebar()" style="color:#ff4444">❌ Close</a>
     </div>
 
     <div class="content-area">
-        <div class="league-header" id="leagueName">BRONZE</div>
-        <div id="coinCount">0</div>
-        
         <div class="coin-wrapper" onclick="handleTap(event)">
             <div id="clicker">D</div>
         </div>
@@ -64,18 +71,11 @@
     <div id="adminModal" class="modal">
         <h2 style="color:#00ff00">ADMIN PANEL</h2>
         <p id="totalUsersStat">Total Players: ...</p>
-        <textarea id="broadcastMsg" placeholder="Write message to all..."></textarea>
-        <button class="btn-action" style="background:#0088cc; color:white;" onclick="sendBroadcast()">📢 SEND BROADCAST</button>
+        <textarea id="broadcastMsg" placeholder="Broadcast message..."></textarea>
+        <button class="btn-action" style="background:#0088cc; color:white;" onclick="sendBroadcast()">📢 SEND TO ALL</button>
         <button class="btn-action" style="background:#ff4444; color:white;" onclick="clearBroadcast()">🗑 DELETE BROADCAST</button>
         <button class="btn-action" onclick="addAdminCoins()">💰 +100,000 COINS</button>
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('adminModal')">CLOSE</button>
-    </div>
-
-    <div id="walletModal" class="modal">
-        <h2 style="color:#ffd700">TELEGRAM WALLET</h2>
-        <p>Connect your official Telegram Wallet to withdraw or deposit funds.</p>
-        <button class="btn-action" onclick="connectWallet()">👛 CONNECT WALLET</button>
-        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">BACK</button>
     </div>
 
     <div id="leaderModal" class="modal">
@@ -100,7 +100,6 @@
         let botLvl = 0;
         const botCosts = [500, 1500, 5000, 8000, 16000, 25000, 30000, 50000, 70000];
 
-        // Broadcast listener
         globalRef.child('broadcast').on('value', (s) => {
             const msg = s.val();
             if (msg) tg.showPopup({ title: 'Announcement 📢', message: msg, buttons: [{type: 'ok'}] });
@@ -141,22 +140,20 @@
             setTimeout(() => plus.remove(), 700);
         }
 
-        function connectWallet() {
-            tg.showAlert("Connecting to Telegram Wallet... (Feature coming soon)");
-            // In real app: tg.openTelegramLink("https://t.me/wallet");
+        function openTgWallet() {
+            // Opens the official Telegram @wallet
+            tg.openTelegramLink("https://t.me/wallet");
         }
 
         function sendBroadcast() {
             const msg = document.getElementById('broadcastMsg').value;
             if (!msg) return;
-            globalRef.update({ broadcast: msg }).then(() => {
-                tg.showAlert("Sent to all players!");
-            });
+            globalRef.update({ broadcast: msg }).then(() => tg.showAlert("Broadcast sent!"));
         }
 
         function clearBroadcast() {
             globalRef.update({ broadcast: null }).then(() => {
-                tg.showAlert("Broadcast deleted.");
+                tg.showAlert("Deleted!");
                 document.getElementById('broadcastMsg').value = "";
             });
         }
@@ -176,7 +173,7 @@
                 s.forEach(child => { players.push(child.val()); });
                 players.reverse().forEach((p, i) => {
                     let medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1) + ".";
-                    html += `<div class="leader-item" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${medal} ${p.name || 'Player'}</span> <b>${Math.floor(p.coins).toLocaleString()}</b></div>`;
+                    html += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${medal} ${p.name || 'Player'}</span> <b>${Math.floor(p.coins).toLocaleString()}</b></div>`;
                 });
                 document.getElementById('leaderList').innerHTML = html;
             });
@@ -190,6 +187,7 @@
         }
 
         function addAdminCoins() { coins += 100000; userRef.update({coins: coins}); }
+        function claimBonus() { coins += 5000; userRef.update({coins: coins}); tg.showAlert("Bonus claimed!"); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { document.getElementById(id).style.display='block'; toggleSidebar(); }
         function closeM(id) { document.getElementById(id).style.display='none'; }
