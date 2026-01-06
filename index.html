@@ -29,7 +29,7 @@
         .btn-action { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
         input, textarea { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; box-sizing: border-box; background: #eee; color: #000; }
         
-        .leader-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,215,0,0.2); }
+        .leader-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid rgba(255,215,0,0.15); align-items: center; }
         .plus-one { position: absolute; color: #ffd700; font-size: 32px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s ease-out forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
@@ -63,7 +63,7 @@
     <div id="adminModal" class="modal">
         <h2 style="color:#00ff00">ADMIN PANEL</h2>
         <p id="totalUsersStat">Total Players: ...</p>
-        <textarea id="broadcastMsg" placeholder="Broadcast Message..."></textarea>
+        <textarea id="broadcastMsg" placeholder="Broadcast Message to All Users..."></textarea>
         <button class="btn-action" style="background:#0088cc; color:white;" onclick="sendBroadcast()">📢 SEND TO ALL</button>
         <button class="btn-action" onclick="addAdminCoins()">💰 +100,000 COINS</button>
         <button class="btn-action" style="background:#444; color:white;" onclick="closeM('adminModal')">CLOSE</button>
@@ -94,7 +94,6 @@
         let bonusClaimed = false;
         const botCosts = [500, 1500, 5000, 8000, 16000, 25000, 30000, 50000, 70000];
 
-        // Listen for Broadcasts
         globalRef.child('broadcast').on('value', (s) => {
             const msg = s.val();
             if (msg) { tg.showPopup({ title: 'Announcement 📢', message: msg, buttons: [{type: 'ok'}] }); }
@@ -105,11 +104,21 @@
             coins = data.coins || 0;
             botLvl = data.botLvl || 0;
             bonusClaimed = data.bonusClaimed || false;
-            userRef.update({ name: userName }); // Save name for leaderboard
+            userRef.update({ name: userName, coins: coins }); 
 
             document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
             document.getElementById('botLevelDisplay').innerText = `LVL: ${botLvl}`;
             
+            let l = "BRONZE";
+            if(coins >= 10000) l = "SILVER";
+            if(coins >= 50000) l = "GOLD";
+            if(coins >= 100000) l = "PLATINUM";
+            document.getElementById('leagueName').innerText = l + " LEAGUE";
+
+            let btn = document.getElementById('upgradeBotBtn');
+            if (botLvl >= 10) { btn.innerText = "MAX LEVEL"; btn.disabled = true; }
+            else { btn.innerText = `UPGRADE (${botCosts[botLvl]?.toLocaleString() || '70,000'})`; }
+
             if (userId == ADMIN_ID) document.getElementById('adminBtn').style.display = 'block';
         });
 
@@ -133,7 +142,8 @@
                 let players = [];
                 s.forEach(child => { players.push(child.val()); });
                 players.reverse().forEach((p, i) => {
-                    html += `<div class="leader-item"><span>${i+1}. ${p.name || 'Unknown'}</span> <b>${Math.floor(p.coins).toLocaleString()}</b></div>`;
+                    let medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1) + ".";
+                    html += `<div class="leader-item"><span>${medal} ${p.name || 'Player'}</span> <b>${Math.floor(p.coins).toLocaleString()}</b></div>`;
                 });
                 document.getElementById('leaderList').innerHTML = html;
             });
@@ -150,7 +160,7 @@
             const msg = document.getElementById('broadcastMsg').value;
             if (!msg) return;
             globalRef.update({ broadcast: msg }).then(() => {
-                tg.showAlert("Sent!");
+                tg.showAlert("Broadcast Sent!");
                 setTimeout(() => globalRef.update({ broadcast: null }), 5000);
             });
         }
@@ -162,24 +172,26 @@
         }
 
         function addAdminCoins() { coins += 100000; userRef.update({coins: coins}); }
+        
         function transferCoins() {
             const tid = document.getElementById('targetId').value;
             const amt = parseInt(document.getElementById('amount').value);
-            if (coins >= amt && tid) {
+            if (coins >= amt && tid && tid != userId) {
                 const fee = Math.floor(amt * 0.05);
                 userRef.update({coins: coins - amt});
                 firebase.database().ref('users/'+tid).once('value', s => {
-                    let c = s.val()?.coins || 0;
+                    if(!s.exists()) return tg.showAlert("User not found!");
+                    let c = s.val().coins || 0;
                     firebase.database().ref('users/'+tid).update({coins: c + (amt-fee)});
                     firebase.database().ref('users/'+ADMIN_ID).once('value', a => {
-                        let ac = a.val()?.coins || 0;
+                        let ac = a.val().coins || 0;
                         firebase.database().ref('users/'+ADMIN_ID).update({coins: ac + fee});
                     });
+                    tg.showAlert("Success!"); closeM('walletModal');
                 });
-                tg.showAlert("Success!");
-                closeM('walletModal');
-            }
+            } else { tg.showAlert("Invalid ID or Amount!"); }
         }
+
         function claimBonus() { if (!bonusClaimed) { coins += 5000; userRef.update({coins: coins, bonusClaimed: true}); tg.showAlert("Bonus claimed!"); } }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { document.getElementById(id).style.display='block'; toggleSidebar(); }
