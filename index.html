@@ -8,22 +8,42 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-#turboTimerDisplay {
-    color: #ff4444;
-    font-size: 20px;
-    font-weight: bold;
-    margin-top: 10px;
-    display: none; /* Танҳо вақте турбо фаъол аст, намоён мешавад */
-    text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
-    animation: pulse 1s infinite;
-}
+        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; outline: none; }
+        body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Стили Таймери Турбо дар зери тангаҳо */
+        #turboTimerDisplay {
+            color: #ff4444;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 5px;
+            display: none;
+            text-shadow: 0 0 8px rgba(255, 68, 68, 0.6);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
+        .click-area { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        #clicker { width: 220px; height: 220px; background: radial-gradient(circle, #ffcc33 0%, #cc9900 100%); border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 90px; color: #663300; font-weight: bold; border: 10px solid #e6b800; box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); cursor: pointer; transition: transform 0.05s; z-index: 5; }
+        #clicker:active { transform: scale(0.92); }
+        
+        #loader { width: 80px; height: 80px; border: 8px solid #002b5c; border-top: 8px solid #ffd700; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #00152e; transition: 0.3s; z-index: 1000; border-right: 2px solid #ffd700; padding-top: 50px; }
+        .sidebar.active { left: 0; }
+        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 17px; color: #e0e0e0; display: block; border-bottom: 1px solid #002b5c; cursor: pointer; text-align: left; }
+        
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #001c3d; padding: 25px; border-radius: 25px; width: 85%; z-index: 1100; border: 2px solid #ffd700; max-height: 80vh; overflow-y: auto; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1050; }
+        .btn-gold { background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+        
+        .tap-number { position: absolute; color: #ffd700; font-size: 35px; font-weight: 900; pointer-events: none; animation: moveUp 0.8s ease-out forwards; z-index: 10; }
+        @keyframes moveUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
+        
+        #ad-banner { display: none; background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; padding: 10px; margin: 10px; border-radius: 10px; color: #ffd700; font-weight: bold; }
+        .skin-box { background: #002b5c; padding: 10px; border-radius: 15px; border: 1px solid #ffd700; }
+    </style>
 </head>
 <body>
 
@@ -47,13 +67,11 @@
         </div>
         <div id="ad-banner"></div>
         <div id="balance" style="font-size: 45px; color: #ffd700; font-weight: bold; margin-top: 10px;">WAIT...</div>
-        <div id="turboTimerDisplay">TURBO: 59:59</div>
+        <div id="turboTimerDisplay"></div>
     </div>
 
     <div class="click-area">
-        <div id="loadingContainer">
-            <div id="loader"></div>
-        </div>
+        <div id="loadingContainer"><div id="loader"></div></div>
         <div id="clicker" onclick="handleTap(event)">D</div>
     </div>
 
@@ -67,9 +85,25 @@
     </div>
 
     <div id="skinModal" class="modal"><h2>🎨 SKIN SHOP</h2><div id="skinGrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div><button class="btn-gold" style="background:#444; color:#fff; margin-top: 15px;" onclick="closeAll()">CLOSE</button></div>
-    <div id="upgradeModal" class="modal"><h2>🚀 UPGRADE</h2><p>Level: <b id="lvlNow">1</b> / 5</p><button id="upBtn" class="btn-gold" onclick="doUpgrade()">UPGRADE</button><button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">BACK</button></div>
-    <div id="adminModal" class="modal"><h2>🛠 ADMIN</h2><textarea id="adMsg" style="width:100%; height:60px; margin-bottom:10px;"></textarea><button class="btn-gold" onclick="sendAd()">📢 SEND</button><button class="btn-gold" onclick="add100k()" style="background:#222; color:#0ff;">+100K</button><button class="btn-gold" style="background:#444;" onclick="closeAll()">BACK</button></div>
+    
+    <div id="upgradeModal" class="modal">
+        <h2>🚀 UPGRADE</h2>
+        <p>Level: <b id="lvlNow">1</b> / 5</p>
+        <button id="upBtn" class="btn-gold" onclick="doUpgrade()">UPGRADE</button>
+        <button class="btn-gold" style="background:#444; color:#fff;" onclick="closeAll()">BACK</button>
+    </div>
+
+    <div id="adminModal" class="modal">
+        <h2>🛠 ADMIN PANEL</h2>
+        <textarea id="adMsg" placeholder="Type ad text..." style="width:100%; height:80px; border-radius:10px; padding:10px; margin-bottom:10px;"></textarea>
+        <button class="btn-gold" onclick="sendAd()">📢 SEND AD</button>
+        <button class="btn-gold" onclick="clearAd()" style="background:#ff4444; color:#fff;">🗑 DELETE AD</button>
+        <button class="btn-gold" onclick="add100k()" style="background:#222; color:#0f0;">+100K TEST COINS</button>
+        <button class="btn-gold" style="background:#444;" onclick="closeAll()">BACK</button>
+    </div>
+
     <div id="walletModal" class="modal"><h2>👛 WALLET</h2><input type="text" id="walletInput" placeholder="UQ..." style="width:100%; padding:10px;"><button class="btn-gold" onclick="saveWallet()">SAVE</button><button class="btn-gold" style="background:#444;" onclick="closeAll()">BACK</button></div>
+    
     <div id="leaderboardModal" class="modal"><h2>🏆 TOP 10</h2><div id="leaderList"></div><button class="btn-gold" style="background:#444;" onclick="closeAll()">CLOSE</button></div>
 
     <script>
@@ -94,13 +128,24 @@
             updateUI();
         });
 
+        globalRef.on('value', s => {
+            const g = s.val();
+            const banner = document.getElementById('ad-banner');
+            if(g && g.ad_text && g.ad_text !== "") {
+                banner.innerText = "📢 " + g.ad_text;
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
+            }
+        });
+
         function updateUI() {
             if(!isReady) return;
             document.getElementById('balance').innerText = Math.floor(data.coins).toLocaleString();
             document.getElementById('clicker').innerText = data.activeSkin;
             document.getElementById('lvlNow').innerText = data.tapLvl + 1;
             if(data.tapLvl < 5) document.getElementById('upBtn').innerText = `UPGRADE (${costs[data.tapLvl].toLocaleString()})`;
-            else document.getElementById('upBtn').innerText = "MAX";
+            else document.getElementById('upBtn').innerText = "MAX LEVEL";
             if(uId == ADMIN_ID) document.getElementById('adminLink').style.display = 'block';
             renderSkins();
             checkTurboStatus();
@@ -108,37 +153,33 @@
 
         function checkTurboStatus() {
             const now = Date.now();
-            const timerDisplay = document.getElementById('turboTimerDisplay');
+            const timerDiv = document.getElementById('turboTimerDisplay');
             const menuBtn = document.getElementById('turboBtnMenu');
             const modalBtn = document.getElementById('buyTurboBtn');
 
-            if (now < data.turboEnd) {
+            if (data.turboEnd && now < data.turboEnd) {
                 let diff = data.turboEnd - now;
-                let minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                let seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                
-                // Намоиш дар зери тангаҳо
-                timerDisplay.innerText = `TURBO ACTIVE: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-                timerDisplay.style.display = 'block';
-                
-                menuBtn.innerText = `🔥 Turbo Active (${minutes}m)`;
-                modalBtn.innerText = "ALREADY ACTIVE";
+                let min = Math.floor(diff / 60000);
+                let sec = Math.floor((diff % 60000) / 1000);
+                timerDiv.innerText = `🔥 TURBO: ${min}:${sec < 10 ? '0' : ''}${sec}`;
+                timerDiv.style.display = 'block';
+                menuBtn.innerText = `🔥 Turbo Active (${min}m)`;
                 modalBtn.disabled = true;
+                modalBtn.innerText = "ALREADY ACTIVE";
             } else {
-                timerDisplay.style.display = 'none';
+                timerDiv.style.display = 'none';
                 menuBtn.innerText = "🔥 Turbo Mode (10k)";
-                modalBtn.innerText = "ACTIVATE";
                 modalBtn.disabled = false;
+                modalBtn.innerText = "ACTIVATE";
             }
         }
 
         function buyTurbo() {
-            if(!isReady || Date.now() < data.turboEnd) return;
+            if(!isReady || (data.turboEnd && Date.now() < data.turboEnd)) return;
             if(data.coins >= 10000) {
                 data.coins -= 10000;
                 data.turboEnd = Date.now() + 3600000;
                 uRef.update({ coins: data.coins, turboEnd: data.turboEnd });
-                alert("Turbo Activated!");
                 closeAll();
             } else alert("Not enough coins!");
         }
@@ -154,30 +195,44 @@
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        // Функсияҳои дигар (Топ 10, Скин ва ғ.) бетағйир монданд
+        function sendAd() { const msg = document.getElementById('adMsg').value; if(msg.trim()) globalRef.update({ ad_text: msg }); }
+        function clearAd() { globalRef.update({ ad_text: "" }); document.getElementById('adMsg').value = ""; alert("Ad deleted!"); }
+
         function showLeaderboard() {
             const now = new Date(); const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
             if (data.lastLeaderboardPayDate === todayStr) loadAndShowLeaderboard();
             else if (confirm("View Top 10 costs 8,000 coins. Proceed?")) {
                 if (data.coins >= 8000) { data.coins -= 8000; data.lastLeaderboardPayDate = todayStr; uRef.update({ coins: data.coins, lastLeaderboardPayDate: todayStr }); loadAndShowLeaderboard(); }
+                else alert("Not enough coins!");
             }
         }
-        function loadAndShowLeaderboard() { showM('leaderboardModal'); firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', s => { let l = ""; let players = []; s.forEach(c => { players.push(c.val()); }); players.reverse().forEach((p, i) => { let r = i===0?"🥇":i===1?"🥈":i===2?"🥉":""; l += `<div style="padding:8px; border-bottom:1px solid #333">${i+1}. ${p.name || 'User'}: ${Math.floor(p.coins).toLocaleString()} ${r}</div>`; }); document.getElementById('leaderList').innerHTML = l; }); }
+
+        function loadAndShowLeaderboard() {
+            showM('leaderboardModal');
+            firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', s => {
+                let l = ""; let players = []; s.forEach(c => { players.push(c.val()); });
+                players.reverse().forEach((p, i) => {
+                    let r = i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
+                    l += `<div style="padding:8px; border-bottom:1px solid #333">${i+1}. ${p.name || 'User'}: ${Math.floor(p.coins).toLocaleString()} ${r}</div>`;
+                });
+                document.getElementById('leaderList').innerHTML = l;
+            });
+        }
+
         function joinChannel() { tg.openTelegramLink("https://t.me/DILIK_officia"); if(!data.joinedChannel) { data.coins += 5000; data.joinedChannel = true; uRef.update({ coins: data.coins, joinedChannel: true }); } }
         function renderSkins() { let h = ""; skins.forEach(s => { const isO = data.ownedSkins.includes(s.id); h += `<div class="skin-box"><div style="font-size:30px">${s.id}</div><button class="btn-gold" style="padding:5px;font-size:10px" onclick="${isO ? `setS('${s.id}')` : `buyS('${s.id}',${s.p})`}">${isO ? (data.activeSkin==s.id?'ACTIVE':'USE') : s.p}</button></div>`; }); document.getElementById('skinGrid').innerHTML = h; }
         function buyS(i, p) { if(data.coins >= p) { let o = [...data.ownedSkins, i]; uRef.update({coins: data.coins - p, ownedSkins: o}); } }
         function setS(i) { uRef.update({activeSkin: i}); }
-        function sendAd() { globalRef.update({ ad_text: document.getElementById('adMsg').value }); }
+        function doUpgrade() { if(data.tapLvl < 5 && data.coins >= costs[data.tapLvl]) uRef.update({ coins: data.coins - costs[data.tapLvl], tapLvl: data.tapLvl + 1 }); }
         function add100k() { uRef.update({ coins: data.coins + 100000 }); }
         function toggleS() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { closeAll(); document.getElementById('overlay').style.display='block'; document.getElementById(id).style.display='block'; if(document.getElementById('sidebar').classList.contains('active')) toggleS(); }
         function closeAll() { document.getElementById('overlay').style.display='none'; const m = document.getElementsByClassName('modal'); for(let x of m) x.style.display='none'; }
         function saveWallet() { uRef.update({ wallet: document.getElementById('walletInput').value }); alert("Saved!"); }
         function invite() { tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/Dilik_gold_bot?start=${uId}&text=Join and Earn!`); }
-        tg.expand();
         
-        // Таймерро ҳар сония нав мекунем
-        setInterval(checkTurboStatus, 1000); 
+        tg.expand();
+        setInterval(checkTurboStatus, 1000);
     </script>
 </body>
 </html>
