@@ -10,31 +10,35 @@
     <style>
         body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow: hidden; touch-action: manipulation; display: flex; flex-direction: column; height: 100vh; }
         
+        /* Top Bar & UI */
         .top-bar { display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; height: 40px; }
         .menu-icon { position: absolute; left: 20px; font-size: 28px; cursor: pointer; color: #ffd700; z-index: 100; }
         .league-header { font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
-        
-        #coinCount { font-size: 55px; color: #ffd700; font-weight: bold; margin-top: 5px; }
+        #coinCount { font-size: 50px; color: #ffd700; font-weight: bold; margin-top: 5px; }
 
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 999; padding-top: 80px; border-right: 2px solid #ffd700; text-align: left; }
+        /* Sidebar */
+        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #001c3d; transition: 0.4s; z-index: 999; padding-top: 60px; border-right: 2px solid #ffd700; text-align: left; overflow-y: auto; }
         .sidebar.active { left: 0; }
-        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 18px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; }
+        .sidebar a { padding: 15px 20px; text-decoration: none; font-size: 16px; color: white; display: block; border-bottom: 1px solid #003366; cursor: pointer; }
         
-        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 60px; }
+        /* Main Game Area */
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 30px; }
+        .coin-wrapper { position: relative; display: inline-block; margin-bottom: 30px; -webkit-tap-highlight-color: transparent; } 
         
-        .coin-wrapper { position: relative; display: inline-block; margin-bottom: 50px; -webkit-tap-highlight-color: transparent; } 
-        #clicker { width: 200px; height: 200px; background: radial-gradient(circle, #ffcc33, #cc9900); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 85px; color: #663300; font-weight: bold; border: 8px solid #e6b800; cursor: pointer; box-shadow: 0 0 25px rgba(255,215,0,0.3); transition: transform 0.05s; user-select: none; margin: 0 auto; }
-        #clicker:active { transform: scale(0.95); }
+        #clicker { width: 180px; height: 180px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 80px; cursor: pointer; transition: transform 0.05s; user-select: none; margin: 0 auto; border: 8px solid rgba(255,215,0,0.5); background-size: cover; background-position: center; }
+        #clicker:active { transform: scale(0.92); }
         
         .bot-container { margin: 0 auto 10px auto; width: 85%; background: rgba(255, 215, 0, 0.08); padding: 12px; border-radius: 18px; border: 1px solid rgba(255, 215, 0, 0.3); }
-        .bot-info { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: bold; margin-bottom: 10px; color: #ffd700; }
-        .bot-btn { background: #ffd700; color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; }
+        .bot-btn { background: #ffd700; color: #000; border: none; padding: 10px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 14px; margin-top: 5px; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 5%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 20px; border-radius: 20px; width: 90%; z-index: 1001; border: 2px solid #ffd700; max-height: 85vh; overflow-y: auto; }
+        .btn-action { background: #ffd700; color: black; padding: 12px; width: 100%; border: none; border-radius: 10px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         
-        .modal { display: none; position: fixed; top: 10%; left: 50%; transform: translate(-50%, 0); background: #001c3d; padding: 25px; border-radius: 20px; width: 90%; z-index: 1001; border: 2px solid #ffd700; box-sizing: border-box; max-height: 80vh; overflow-y: auto; }
-        .btn-action { background: #ffd700; color: black; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; }
-        input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #eee; color: #000; margin-top: 10px; }
+        .skin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
+        .skin-img { width: 40px; height: 40px; border-radius: 50%; background-color: #ffd700; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         
-        .plus-one { position: absolute; color: #ffd700; font-size: 32px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s ease-out forwards; }
+        .plus-one { position: absolute; color: #ffd700; font-size: 30px; font-weight: bold; pointer-events: none; animation: floatUp 0.7s forwards; }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
@@ -47,160 +51,157 @@
 
     <div class="sidebar" id="sidebar">
         <a onclick="showLeaderboard()">🏆 Top 10 Players</a>
+        <a onclick="showM('turboModal')" style="color:#ff4444">🔥 Turbo Mode (10k)</a>
+        <a onclick="showM('skinModal')" style="color:#00ff00">🎨 Skin Shop</a>
+        <a onclick="showM('tapUpgradeModal')">🚀 Upgrade Tap</a>
         <a onclick="invite()">👥 Invite Friends</a>
         <a onclick="showM('walletModal')">👛 Wallet (TON)</a>
-        <a href="https://t.me/DILIK_officia" target="_blank" onclick="claimBonus()">📢 Join Channel (+5k)</a>
         <a id="adminBtn" onclick="showAdminPanel()" style="display:none; color:#00ff00;">🛠 Admin Panel</a>
         <a onclick="toggleSidebar()" style="color:#ff4444">❌ Close</a>
     </div>
 
     <div class="content-area">
+        <div id="turboTimer" style="color:#ff4444; font-weight:bold; margin-bottom:10px; display:none;">TURBO ACTIVE: <span id="timeSec">60:00</span></div>
         <div class="coin-wrapper" onclick="handleTap(event)">
-            <div id="clicker">D</div>
+            <div id="clicker">💰</div>
         </div>
         <div class="bot-container">
-            <div class="bot-info"><span>🤖 AUTO-BOT</span><span id="botLevelDisplay">LVL: 0</span></div>
-            <button id="upgradeBotBtn" class="bot-btn" onclick="upgradeBot()">UPGRADE (500)</button>
+            <div style="font-size:12px; color:#ffd700;">🤖 AUTO-BOT LVL: <span id="botLevelDisplay">0</span></div>
+            <button id="upgradeBotBtn" class="bot-btn" onclick="upgradeBot()">UPGRADE</button>
         </div>
+    </div>
+
+    <div id="turboModal" class="modal">
+        <h2 style="color:#ff4444">TURBO MODE</h2>
+        <p>Pay 10,000 coins to get <b>+5 coins per tap</b> for 1 hour!</p>
+        <button class="btn-action" onclick="activateTurbo()">🔥 ACTIVATE (10,000)</button>
+        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('turboModal')">CLOSE</button>
+    </div>
+
+    <div id="skinModal" class="modal">
+        <h2 style="color:#00ff00">SKIN SHOP</h2>
+        <div id="skinList">
+            </div>
+        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('skinModal')">CLOSE</button>
     </div>
 
     <div id="walletModal" class="modal">
-        <h2 style="color:#ffd700">WALLET CONNECT</h2>
-        <p style="font-size: 14px;">Copy your TON address from Telegram Wallet or Tonkeeper and paste it here.</p>
-        <input type="text" id="walletAddressInput" placeholder="Wallet Address (UQ...)">
-        <button class="btn-action" onclick="saveWalletAddress()">💾 SAVE ADDRESS</button>
-        <hr style="border: 0.5px solid #333; margin: 20px 0;">
-        <button class="btn-action" style="background:#0088cc; color:white;" onclick="tg.openTelegramLink('https://t.me/wallet')">👛 OPEN @WALLET</button>
-        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">BACK</button>
-    </div>
-
-    <div id="adminModal" class="modal">
-        <h2 style="color:#00ff00">ADMIN PANEL</h2>
-        <p id="totalUsersStat">Total Players: ...</p>
-        <textarea id="broadcastMsg" placeholder="Type message for all users..."></textarea>
-        <button class="btn-action" style="background:#0088cc; color:white;" onclick="sendBroadcast()">📢 SEND BROADCAST</button>
-        <button class="btn-action" style="background:#ff4444; color:white;" onclick="clearBroadcast()">🗑 DELETE MESSAGE</button>
-        <button class="btn-action" onclick="addAdminCoins()">💰 +100,000 COINS</button>
-        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('adminModal')">CLOSE</button>
-    </div>
-
-    <div id="leaderModal" class="modal">
-        <h2 style="color:#ffd700">🏆 TOP 10 PLAYERS</h2>
-        <div id="leaderList">Loading...</div>
-        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('leaderModal')">CLOSE</button>
+        <h2 style="color:#ffd700">WALLET</h2>
+        <input type="text" id="walletAddressInput" placeholder="TON Address" style="width:90%; padding:10px; margin-top:10px;">
+        <button class="btn-action" onclick="saveWalletAddress()">SAVE</button>
+        <button class="btn-action" style="background:#444; color:white;" onclick="closeM('walletModal')">CLOSE</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand();
         const ADMIN_ID = 5863448768;
         const config = { databaseURL: "https://dilik-game-default-rtdb.firebaseio.com" };
         firebase.initializeApp(config);
         
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "user_test";
-        const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "User";
         const userRef = firebase.database().ref('users/' + userId);
-        const globalRef = firebase.database().ref('global_config');
         
-        let coins = 0;
-        let botLvl = 0;
-        const botCosts = [500, 1500, 5000, 8000, 16000, 25000, 30000, 50000, 70000];
+        let coins = 0, botLvl = 0, tapLvl = 0, turboEnd = 0, activeSkin = "💰";
+        const skins = [
+            {icon: "💰", name: "Default Gold", price: 0},
+            {icon: "💎", name: "Diamond", price: 50000},
+            {icon: "🔮", name: "Magic Orb", price: 75000},
+            {icon: "🪙", name: "Silver Coin", price: 10000},
+            {icon: "🔥", name: "Fire Token", price: 30000},
+            {icon: "🍀", name: "Lucky Leaf", price: 20000},
+            {icon: "🌟", name: "Star Coin", price: 40000},
+            {icon: "🍎", name: "Apple Coin", price: 15000},
+            {icon: "⚡", name: "Energy Coin", price: 60000},
+            {icon: "₿", name: "Bitcoin", price: 100000}
+        ];
 
         userRef.on('value', (s) => {
             const data = s.val() || {};
             coins = data.coins || 0;
             botLvl = data.botLvl || 0;
-            if(data.walletAddress) {
-                document.getElementById('walletAddressInput').value = data.walletAddress;
-            }
-
-            document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
-            document.getElementById('botLevelDisplay').innerText = `LVL: ${botLvl}`;
+            tapLvl = data.tapLvl || 0;
+            turboEnd = data.turboEnd || 0;
+            activeSkin = data.activeSkin || "💰";
             
-            let l = "BRONZE";
-            if(coins >= 10000) l = "SILVER";
-            if(coins >= 50000) l = "GOLD";
-            if(coins >= 100000) l = "PLATINUM";
-            document.getElementById('leagueName').innerText = l + " LEAGUE";
-
-            let btn = document.getElementById('upgradeBotBtn');
-            if (botLvl >= 10) { btn.innerText = "MAX LEVEL"; btn.disabled = true; }
-            else { btn.innerText = `UPGRADE (${botCosts[botLvl]?.toLocaleString() || '70,000'})`; }
-
+            document.getElementById('coinCount').innerText = Math.floor(coins).toLocaleString();
+            document.getElementById('botLevelDisplay').innerText = botLvl;
+            document.getElementById('clicker').innerText = activeSkin;
+            
             if (userId == ADMIN_ID) document.getElementById('adminBtn').style.display = 'block';
+            loadSkins(data.ownedSkins || ["💰"]);
         });
 
-        function saveWalletAddress() {
-            const addr = document.getElementById('walletAddressInput').value;
-            if (addr.length < 10) return tg.showAlert("Invalid address!");
-            userRef.update({ walletAddress: addr, name: userName }).then(() => {
-                tg.showAlert("Address saved successfully! You are ready for listing.");
+        function loadSkins(owned) {
+            let html = "";
+            skins.forEach(s => {
+                const isOwned = owned.includes(s.icon);
+                html += `<div class="skin-item">
+                    <div class="skin-img">${s.icon}</div>
+                    <div style="flex-grow:1; text-align:left; margin-left:15px;">
+                        <b>${s.name}</b><br><small>${isOwned ? 'Owned' : s.price.toLocaleString() + ' coins'}</small>
+                    </div>
+                    <button class="btn-action" style="width:80px; margin:0;" onclick="${isOwned ? `selectSkin('${s.icon}')` : `buySkin('${s.icon}', ${s.price})`}">${isOwned ? 'Use' : 'Buy'}</button>
+                </div>`;
             });
+            document.getElementById('skinList').innerHTML = html;
         }
 
-        setInterval(() => { if (botLvl > 0) { coins += botLvl * 0.4; userRef.update({coins: coins}); } }, 1000);
+        function buySkin(icon, price) {
+            if (coins >= price) {
+                userRef.once('value', s => {
+                    let owned = s.val().ownedSkins || ["💰"];
+                    owned.push(icon);
+                    userRef.update({ coins: coins - price, ownedSkins: owned });
+                    tg.showAlert("Skin purchased!");
+                });
+            } else tg.showAlert("Not enough coins!");
+        }
+
+        function selectSkin(icon) {
+            userRef.update({ activeSkin: icon });
+            tg.showAlert("Skin applied!");
+        }
+
+        function activateTurbo() {
+            if (coins >= 10000) {
+                const endTime = Date.now() + (60 * 60 * 1000);
+                userRef.update({ coins: coins - 10000, turboEnd: endTime });
+                tg.showAlert("Turbo Activated! +5 per tap for 1 hour.");
+                closeM('turboModal');
+            } else tg.showAlert("Not enough coins!");
+        }
 
         function handleTap(e) {
-            coins++;
-            userRef.update({coins: coins, name: userName});
+            const isTurbo = Date.now() < turboEnd;
+            let gain = (1 + tapLvl) + (isTurbo ? 5 : 0);
+            coins += gain;
+            userRef.update({coins: coins});
+            
             tg.HapticFeedback.impactOccurred('medium');
             const plus = document.createElement('div');
-            plus.innerText = '+1'; plus.className = 'plus-one';
-            plus.style.left = (e.clientX - 10) + 'px'; plus.style.top = (e.clientY - 40) + 'px';
+            plus.innerText = '+' + gain; plus.className = 'plus-one';
+            plus.style.left = e.clientX + 'px'; plus.style.top = e.clientY + 'px';
             document.body.appendChild(plus);
             setTimeout(() => plus.remove(), 700);
         }
 
-        function sendBroadcast() {
-            const msg = document.getElementById('broadcastMsg').value;
-            if (!msg) return;
-            globalRef.update({ broadcast: msg }).then(() => tg.showAlert("Broadcast sent!"));
-        }
+        setInterval(() => {
+            const now = Date.now();
+            if (now < turboEnd) {
+                document.getElementById('turboTimer').style.display = 'block';
+                let diff = Math.floor((turboEnd - now) / 1000);
+                let m = Math.floor(diff / 60);
+                let s = diff % 60;
+                document.getElementById('timeSec').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            } else {
+                document.getElementById('turboTimer').style.display = 'none';
+            }
+        }, 1000);
 
-        function clearBroadcast() {
-            globalRef.update({ broadcast: null }).then(() => {
-                tg.showAlert("Broadcast deleted!");
-                document.getElementById('broadcastMsg').value = "";
-            });
-        }
-
-        function showAdminPanel() {
-            firebase.database().ref('users').once('value', (s) => {
-                document.getElementById('totalUsersStat').innerText = `Total Players: ${s.numChildren()}`;
-            });
-            showM('adminModal');
-        }
-
-        function showLeaderboard() {
-            showM('leaderModal');
-            firebase.database().ref('users').orderByChild('coins').limitToLast(10).once('value', (s) => {
-                let html = "";
-                let players = [];
-                s.forEach(child => { players.push(child.val()); });
-                players.reverse().forEach((p, i) => {
-                    let medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1) + ".";
-                    html += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #333;"><span>${medal} ${p.name || 'Player'}</span> <b>${Math.floor(p.coins).toLocaleString()}</b></div>`;
-                });
-                document.getElementById('leaderList').innerHTML = html;
-            });
-        }
-
-        function upgradeBot() {
-            if (botLvl >= 9) { tg.showAlert("Max Level Reached!"); return; }
-            let cost = botCosts[botLvl];
-            if (coins >= cost) { coins -= cost; botLvl++; userRef.update({coins: coins, botLvl: botLvl}); }
-            else tg.showAlert("Not enough coins!");
-        }
-
-        function addAdminCoins() { coins += 100000; userRef.update({coins: coins}); }
-        function claimBonus() { coins += 5000; userRef.update({coins: coins}); tg.showAlert("Bonus claimed!"); }
+        // Sidebar and UI helpers
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
         function showM(id) { document.getElementById(id).style.display='block'; toggleSidebar(); }
         function closeM(id) { document.getElementById(id).style.display='none'; }
-        function invite() {
-            const botLink = `https://t.me/Dilik_gold_bot?start=${userId}`;
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=Join%20Dilik%20Gold!`);
-        }
     </script>
 </body>
 </html>
