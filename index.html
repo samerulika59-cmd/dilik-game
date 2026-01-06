@@ -8,25 +8,22 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; outline: none; }
-        body { background: #000b1a; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        .click-area { flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; }
-        #clicker { width: 220px; height: 220px; background: radial-gradient(circle, #ffcc33 0%, #cc9900 100%); border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 90px; color: #663300; font-weight: bold; border: 10px solid #e6b800; box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); cursor: pointer; transition: transform 0.05s; z-index: 5; }
-        #clicker:active { transform: scale(0.92); }
-        #loader { width: 80px; height: 80px; border: 8px solid #002b5c; border-top: 8px solid #ffd700; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .sidebar { position: fixed; left: -280px; top: 0; width: 260px; height: 100%; background: #00152e; transition: 0.3s; z-index: 1000; border-right: 2px solid #ffd700; padding-top: 50px; }
-        .sidebar.active { left: 0; }
-        .sidebar a { padding: 18px 25px; text-decoration: none; font-size: 17px; color: #e0e0e0; display: block; border-bottom: 1px solid #002b5c; cursor: pointer; text-align: left; }
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #001c3d; padding: 25px; border-radius: 25px; width: 85%; z-index: 1100; border: 2px solid #ffd700; max-height: 80vh; overflow-y: auto; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1050; }
-        .btn-gold { background: linear-gradient(180deg, #ffd700, #b8860b); color: #000; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
-        .tap-number { position: absolute; color: #ffd700; font-size: 35px; font-weight: 900; pointer-events: none; animation: moveUp 0.8s ease-out forwards; z-index: 10; }
-        @keyframes moveUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
-        #ad-banner { display: none; background: rgba(255, 215, 0, 0.1); border: 1px solid #ffd700; padding: 10px; margin: 10px; border-radius: 10px; color: #ffd700; font-weight: bold; }
-        .skin-box { background: #002b5c; padding: 10px; border-radius: 15px; border: 1px solid #ffd700; }
-        #turboTimerDisplay { color: #ff4444; font-size: 18px; font-weight: bold; margin-top: 5px; display: none; }
-    </style>
+#turboTimerDisplay {
+    color: #ff4444;
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 10px;
+    display: none; /* Танҳо вақте турбо фаъол аст, намоён мешавад */
+    text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
 </head>
 <body>
 
